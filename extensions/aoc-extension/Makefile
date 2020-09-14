@@ -2,7 +2,7 @@ export BASE_SPACE=$(shell pwd)
 export BUILD_SPACE=$(BASE_SPACE)/build
 export AOC_BOOTSTRAP=$(BUILD_SPACE)/aoc-extension
 export S3_BUCKET_NAME=aoc-layers
-export AOC_LAYER_NAME=your-aoc-layer
+export AOC_LAYER_NAME=my-aoc-layer
 
 clean:
 	rm -rf build/
