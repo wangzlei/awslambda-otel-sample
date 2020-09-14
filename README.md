@@ -21,10 +21,6 @@ receivers:
       grpc:
         endpoint: 0.0.0.0:55680
 
-processors:
-  batch:
-  queued_retry:
-
 exporters:
   logging:
     loglevel: debug
