@@ -25,7 +25,7 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
         int i = 10;
         while(--i >= 0)
         {
-            httpCall();
+            httpCall(contect);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -36,16 +36,12 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
         return response;
     }
 
-    public static void main(String[] args) {
-
-    }
-
-    private static void httpCall() {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
+    private static void httpCall(Context context) {
+        LambdaLogger logger = context.getLogger();
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
             HttpGet httpget = new HttpGet("http://httpbin.org/");
 
-            System.out.println("Executing request " + httpget.getRequestLine());
+            logger.log("Executing request " + httpget.getRequestLine());
 
             // Create a custom response handler
             ResponseHandler<String> responseHandler = response -> {
@@ -58,15 +54,7 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
                 }
             };
             httpclient.execute(httpget, responseHandler);
-            System.out.println("----------------------------------------");
-        } catch(Exception e) {
-            System.out.println("httpCall Exception");
-            try{
-                httpclient.close();
-            } catch(Exception e1) {
-                System.out.println("httpclient.close() Exception");
-            }
-
+            logger.log("----------------------------------------");
         }
     }
 
