@@ -1,5 +1,5 @@
 # awslambda-otel-sample
-make sure you have aws lambda extensions api trial permission, config aws credencial and aws regions as us-east-1
+make sure you have aws lambda extensions api trial permission, config aws credencial and set aws region as us-east-1
 1. run `1-create-bucket.sh`
 2. run `2-deploy.sh`
 3. run `3-invoke.sh`
@@ -20,10 +20,6 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:55680
-
-processors:
-  batch:
-  queued_retry:
 
 exporters:
   logging:
