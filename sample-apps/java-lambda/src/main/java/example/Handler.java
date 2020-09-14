@@ -22,6 +22,7 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
 
         logger.log("AWS Lambda OpenTelemetry integration Sample.");
 
+        // generate 10 spans in 10 sec, will see the data delay in X-Rray caused by Lambda freeze.
         int i = 10;
         while(--i >= 0)
         {
