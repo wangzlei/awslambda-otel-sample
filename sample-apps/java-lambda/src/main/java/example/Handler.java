@@ -25,7 +25,7 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
         int i = 10;
         while(--i >= 0)
         {
-            httpCall(contect);
+            httpCall(context);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -55,6 +55,8 @@ public class Handler implements RequestHandler<Map<String,String>, String> {
             };
             httpclient.execute(httpget, responseHandler);
             logger.log("----------------------------------------");
+        } catch(Exception e) {
+            e.printStackTrace();
         }
     }
 
