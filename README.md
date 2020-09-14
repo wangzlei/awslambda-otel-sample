@@ -10,10 +10,6 @@ This sample relys on 2 Lambda layers: aws-otel-auto-instrumentation and otel-col
 ```yaml
 extensions:
   health_check:
-  pprof:
-    endpoint: 0.0.0.0:1777
-  zpages:
-    endpoint: 0.0.0.0:55679
 
 receivers:
   otlp:
@@ -36,7 +32,7 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [logging]
-  extensions: [health_check, pprof, zpages]
+  extensions: [health_check]
 ```
 
 By default OTel auto instrumentation uses SpanBatchProcessor, batching timer is 5 seconds. You will see X-Ray segments delay caused by Lambda freeze.
