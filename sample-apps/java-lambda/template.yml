@@ -13,7 +13,7 @@ Resources:
       Timeout: 120
       Environment:
         Variables:
-          JAVA_TOOL_OPTIONS: "-javaagent:/opt/javaagent/otelagent.jar  -Dota.exporter=otlp -Dotel.otlp.endpoint=0.0.0.0:55680 -Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info "
+          JAVA_TOOL_OPTIONS: "-javaagent:/opt/javaagent/otelagent.jar -Dota.exporter=otlp -Dotel.otlp.endpoint=localhost:55680 -Dotel.bsp.schedule.delay=5000 -Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info "
       Layers:
         - arn:aws:lambda:us-east-1:886273918189:layer:goCollector:3
         - arn:aws:lambda:us-east-1:886273918189:layer:otel-auto-agent:2
