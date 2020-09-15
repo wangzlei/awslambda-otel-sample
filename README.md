@@ -8,7 +8,7 @@ Make sure you have aws lambda extensions api trial permission, config aws creden
 2. run `2-deploy.sh`
 3. run `3-invoke.sh`
 
-Then from X-Ray console you can get traces in region us-west-2
+Then you can get traces in X-Ray Console.
 
 This sample depends on 2 Lambda layers: aws-otel-auto-instrumentation and otel-collector, now opentelemetry collector config is hardcode as below, will change to be configurable when Lambda Extensions API supports getting environment variable by primitive `os.getEnv()` in next week.
 ```yaml
@@ -26,7 +26,6 @@ exporters:
     loglevel: debug
   awsxray:
     local_mode: true
-    region: 'us-west-2'
 
 service:
   pipelines:
