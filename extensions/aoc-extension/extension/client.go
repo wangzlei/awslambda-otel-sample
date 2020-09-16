@@ -69,7 +69,7 @@ func (e *Client) Register(ctx context.Context, filename string, configKeys []str
 
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"events":            []EventType{Invoke, Shutdown},
-		"configurationKeys": configKeys,
+		//"configurationKeys": configKeys,
 	})
 	if err != nil {
 		return nil, err
