@@ -11,6 +11,7 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -24,6 +25,8 @@ trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 tracer = trace.get_tracer(__name__)
+
+AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 
 def lambda_handler(event, context):
     logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
