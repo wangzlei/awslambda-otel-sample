@@ -29,8 +29,6 @@ trace.get_tracer_provider().add_span_processor(
 )
 tracer = trace.get_tracer(__name__)
 
-AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
-
 def lambda_handler(event, context):
     logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
     logger.info('## EVENT\r' + jsonpickle.encode(event))

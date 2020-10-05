@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eo pipefail
-STACK=lambda-python
+STACK=python-lambda
 if [[ $# -eq 1 ]] ; then
     STACK=$1
     echo "Deleting stack $STACK"
