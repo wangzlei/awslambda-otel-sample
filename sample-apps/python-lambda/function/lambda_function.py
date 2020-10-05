@@ -12,6 +12,9 @@ from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
 )
 
+from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 patch_all()
@@ -31,8 +34,7 @@ def lambda_handler(event, context):
     logger.info('## CONTEXT\r' + jsonpickle.encode(context))
     response = client.get_account_settings()
 
-    with tracer.start_as_current_span("foo"):
-        with tracer.start_as_current_span("bar"):
-            with tracer.start_as_current_span("baz"):
-                print("Hello world, opentelemetry Python")
     return response['AccountUsage']
+
+BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())

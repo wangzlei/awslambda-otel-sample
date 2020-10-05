@@ -3,3 +3,4 @@ aws-xray-sdk==2.4.3
 opentelemetry-api
 opentelemetry-sdk
 opentelemetry-instrumentation
+opentelemetry-instrumentation-botocore
