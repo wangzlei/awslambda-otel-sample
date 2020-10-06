@@ -11,7 +11,6 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
@@ -33,6 +32,7 @@ def lambda_handler(event, context):
     logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
     logger.info('## EVENT\r' + jsonpickle.encode(event))
     logger.info('## CONTEXT\r' + jsonpickle.encode(context))
+
     response = client.get_account_settings()
 
     return response['AccountUsage']
