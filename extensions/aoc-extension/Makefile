@@ -27,4 +27,4 @@ publish-layer: clean build package
 	@echo Publishing aoc Lambda layer
 	aws s3 mb s3://$(S3_BUCKET_NAME)
 	aws s3 cp $(BUILD_SPACE)/otel-col-extension.zip s3://$(S3_BUCKET_NAME)
-	aws lambda publish-layer-version --layer-name $(AOC_LAYER_NAME) --content S3Bucket=$(S3_BUCKET_NAME),S3Key=otel-col-extension.zip --compatible-runtimes java8.al2 java11
+	aws lambda publish-layer-version --layer-name $(AOC_LAYER_NAME) --content S3Bucket=$(S3_BUCKET_NAME),S3Key=otel-col-extension.zip --compatible-runtimes java8.al2 java11 python3.8 python3.7
