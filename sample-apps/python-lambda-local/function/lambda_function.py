@@ -2,8 +2,12 @@ import os
 import logging
 import jsonpickle
 import boto3
+# import botocore
+# import requests
+# import sqlite3
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
+patch_all()
 
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
@@ -15,13 +19,14 @@ from opentelemetry.sdk.trace.export import (
 from opentelemetry.exporter import jaeger
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 
+from opentelemetry.exporter.xraydaemon import XrayDaemonSpanExporter
+
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 
-logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.DEBUG)
 logger = logging.getLogger()
 
-patch_all()
 # resource = Resource(attributes={
 #     "service.name": "Sample App"
 # })
@@ -47,12 +52,18 @@ otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
 span_processor = SimpleExportSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
+
+xrayDaemonSpanExporter = XrayDaemonSpanExporter()
+trace.get_tracer_provider().add_span_processor(
+    SimpleExportSpanProcessor(xrayDaemonSpanExporter)
+)
+
 tracer = trace.get_tracer(__name__)
 
 def lambda_handler(event, context):
-    logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
-    logger.info('## EVENT\r' + jsonpickle.encode(event))
-    logger.info('## CONTEXT\r' + jsonpickle.encode(context))
+    # logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
+    # logger.info('## EVENT\r' + jsonpickle.encode(event))
+    # logger.info('## CONTEXT\r' + jsonpickle.encode(context))
 
     s3 = boto3.resource('s3')
     for bucket in s3.buckets.all():
