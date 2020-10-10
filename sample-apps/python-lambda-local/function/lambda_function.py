@@ -2,14 +2,16 @@ import os
 import logging
 import jsonpickle
 import boto3
-# import botocore
-# import requests
-# import sqlite3
+
+# Nathan
+os.environ["OTEL_PYTHON_PROPAGATORS"] = "aws_xray"
+
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 patch_all()
 
 from opentelemetry import trace
+# from opentelemetry.sdk.extension.aws.trace import AWSXRayIdsGenerator
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -32,6 +34,7 @@ logger = logging.getLogger()
 # })
 
 # trace.set_tracer_provider(TracerProvider(resource=resource))
+# trace.set_tracer_provider(TracerProvider(ids_generator=AWSXRayIdsGenerator()))
 trace.set_tracer_provider(TracerProvider())
 
 jaeger_exporter = jaeger.JaegerSpanExporter(
@@ -48,11 +51,12 @@ trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
-span_processor = SimpleExportSpanProcessor(otlp_exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+# otlp 
+# otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
+# span_processor = SimpleExportSpanProcessor(otlp_exporter)
+# trace.get_tracer_provider().add_span_processor(span_processor)
 
-
+# xray daemon
 xrayDaemonSpanExporter = XrayDaemonSpanExporter()
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(xrayDaemonSpanExporter)

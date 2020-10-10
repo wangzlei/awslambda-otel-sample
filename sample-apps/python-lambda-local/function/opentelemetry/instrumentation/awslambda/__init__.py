@@ -45,8 +45,14 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self._context_parser(args[1])
 
         with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
+            # TODO: propagate trace context from Lambda env variable
+            # TODO: now SpanContext is immutable, cannot update directly.
+            #span.context.trace_id = 1
+            # logger.info(span.context)
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)
+            # TODO: do we need to set namespace for kind.server ?
+            # span.set_attribute('myServiceNS', 'aws')
 
             # TODO: move to lambda resource plugin
             new_resource = Resource(
@@ -80,20 +86,11 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self._aws_xray_daemon_address = os.environ['_AWS_XRAY_DAEMON_ADDRESS']
         self._aws_xray_daemon_port = os.environ['_AWS_XRAY_DAEMON_PORT']
         self.xray_trace_id = os.environ['_X_AMZN_TRACE_ID']
-        # logger.info(self.lambda_handler)
-        # logger.info(self.aws_region)
-        # logger.info(self.aws_lambda_function_name)
-        # logger.info(self.aws_lambda_log_group_name)
-        # logger.info(self.aws_lambda_log_stream_name)
-        # logger.info(self.aws_xray_context_missing)
-        # logger.info(self.aws_xray_daemon_address)
-        # logger.info(self._aws_xray_daemon_address)
-        # logger.info(self._aws_xray_daemon_port)
-        # logger.info(self.xray_trace_id)
+
 
         # logger.info('--- parse module/function ---')
         wrapped_names = self.lambda_handler.split('.')
         self._wrapped_module_name = wrapped_names[0]
         self._wrapped_function_name = wrapped_names[1]
-        # logger.info(self._wrapped_module_name + '  :  ' + self._wrapped_function_name)
+
 

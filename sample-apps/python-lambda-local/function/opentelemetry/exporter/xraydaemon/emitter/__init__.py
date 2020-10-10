@@ -105,14 +105,14 @@ class UDPEmitter(object):
         :param entity: a trace entity to send to the X-Ray daemon
         """
         # TODO: replace to traslator real data
-        # message = "%s%s%s" % (PROTOCOL_HEADER,
-        #                       PROTOCOL_DELIMITER,
-        #                       entity.serialize())
+        message = "%s%s%s" % (PROTOCOL_HEADER,
+                              PROTOCOL_DELIMITER,
+                              entity)
 
-        message = '{"format":"json","version":1}\n{"id": "54d737fe422563a3", "name": "s3", "start_time": 1602137834.7766871, "parent_id": "70bd08d55dc49ee7", "in_progress": false, "http": {"response": {"status": 200}}, "aws": {"operation": "ListBuckets", "region": "us-east-1", "request_id": "E701591DB729AFEB", "id_2": "QDY1T1dyrTiWu8r+1FQrDe9fYIffd8IoXAU0Lc9K8iCZ8k5b2UudLpCnPI82WvQIsguvh0001ns="}, "trace_id": "1-5f7bea37-608fb9b42019a8d73885088a", "type": "subsegment", "namespace": "aws", "end_time": 1602137835.280331}'
+        # message = '{"format":"json","version":1}\n{"id": "54d737fe422563a3", "name": "s3", "start_time": 1602137834.7766871, "parent_id": "70bd08d55dc49ee7", "in_progress": false, "http": {"response": {"status": 200}}, "aws": {"operation": "ListBuckets", "region": "us-east-1", "request_id": "E701591DB729AFEB", "id_2": "QDY1T1dyrTiWu8r+1FQrDe9fYIffd8IoXAU0Lc9K8iCZ8k5b2UudLpCnPI82WvQIsguvh0001ns="}, "trace_id": "1-5f7bea37-608fb9b42019a8d73885088a", "type": "subsegment", "namespace": "aws", "end_time": 1602137835.280331}'
 
-        # log.debug("sending: %s to %s:%s." % (message, self._ip, self._port))
-        # self._send_data(message)
+        log.debug("sending: %s to %s:%s." % (message, self._ip, self._port))
+        self._send_data(message)
 
     def set_daemon_address(self, address):
         """
