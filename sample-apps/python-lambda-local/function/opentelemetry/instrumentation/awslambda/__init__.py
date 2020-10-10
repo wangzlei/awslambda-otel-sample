@@ -22,6 +22,9 @@ from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace import SpanKind, get_tracer
 
+# aws propagator
+from opentelemetry.propagator import AWSXRayFormat
+
 logger = logging.getLogger(__name__)
 
 class AwsLambdaInstrumentor(BaseInstrumentor):
@@ -50,7 +53,14 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             #span.context.trace_id = 1
             # logger.info(span.context)
             # self.xray_trace_id -> span.parent  context
-
+            logger.info('------ lambda propagation ------')
+            propagator = AWSXRayFormat()
+            new_context = propagator.extract(self.xray_trace_id, span.context)
+            logger.info(span.context)
+            logger.info(span.context.trace_id)
+            logger.info(span.context.span_id)
+            logger.info(new_context)
+            span.context = new_context
 
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)

@@ -3,15 +3,13 @@ import logging
 import jsonpickle
 import boto3
 
-# Nathan
-os.environ["OTEL_PYTHON_PROPAGATORS"] = "aws_xray"
-
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 patch_all()
 
 from opentelemetry import trace
 # from opentelemetry.sdk.extension.aws.trace import AWSXRayIdsGenerator
+# aws propagator
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -26,7 +24,7 @@ from opentelemetry.exporter.xraydaemon import XrayDaemonSpanExporter
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 
-logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
 logger = logging.getLogger()
 
 # resource = Resource(attributes={
