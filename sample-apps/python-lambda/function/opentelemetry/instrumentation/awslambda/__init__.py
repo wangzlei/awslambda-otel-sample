@@ -17,10 +17,15 @@ import os
 
 from wrapt import ObjectProxy, wrap_function_wrapper
 
+import opentelemetry.trace as trace
+from opentelemetry.context import Context
 from opentelemetry.instrumentation.awslambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.trace import SpanKind, get_tracer
+
+# aws propagator
+from opentelemetry.propagator import AWSXRayFormat
 
 logger = logging.getLogger(__name__)
 
@@ -35,20 +40,36 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         _wrapped_module_name = wrapped_names[0]
         _wrapped_function_name = wrapped_names[1]
 
-        wrap_function_wrapper(_wrapped_module_name, _wrapped_function_name, self._patched_api_call)
+        wrap_function_wrapper(_wrapped_module_name, _wrapped_function_name, self._lambdaPatch)
 
     def _uninstrument(self, **kwargs):
         pass
 
-    def _patched_api_call(self, original_func, instance, args, kwargs):
+    def _lambdaPatch(self, original_func, instance, args, kwargs):
         # instance, kwargs are empty. args[0] event, args[1] lambda context
         self._context_parser(args[1])
 
         with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
-            result = original_func(*args, **kwargs)
+
+            if self.xray_trace_id and self.xray_trace_id != '':
+                logger.info('------ lambda propagation ------')
+                propagator = AWSXRayFormat()
+                parent_context = propagator.extract(self.xray_trace_id, span.context)           
+                #span.context = new_context. TODO: sampled(flag) and trace state
+                new_context = trace.SpanContext(
+                    trace_id=parent_context.trace_id,
+                    span_id=span.context.span_id,
+                    trace_flags=trace.TraceFlags(1),
+                    trace_state=trace.TraceState(),
+                    is_remote=False,
+                )
+                span.context = new_context
+                span.parent = parent_context
 
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)
+            # TODO: may need an aws convension origin
+            span.set_attribute('aws.origin', 'AWS::Lambda:Function')
 
             # TODO: move to lambda resource plugin
             new_resource = Resource(
@@ -61,6 +82,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             )
             span.resource = new_resource.merge(span.resource)
 
+            result = original_func(*args, **kwargs)
             return result
 
     def _context_parser(self, lambda_context):
@@ -81,20 +103,10 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self._aws_xray_daemon_address = os.environ['_AWS_XRAY_DAEMON_ADDRESS']
         self._aws_xray_daemon_port = os.environ['_AWS_XRAY_DAEMON_PORT']
         self.xray_trace_id = os.environ['_X_AMZN_TRACE_ID']
-        # logger.info(self.lambda_handler)
-        # logger.info(self.aws_region)
-        # logger.info(self.aws_lambda_function_name)
-        # logger.info(self.aws_lambda_log_group_name)
-        # logger.info(self.aws_lambda_log_stream_name)
-        # logger.info(self.aws_xray_context_missing)
-        # logger.info(self.aws_xray_daemon_address)
-        # logger.info(self._aws_xray_daemon_address)
-        # logger.info(self._aws_xray_daemon_port)
-        # logger.info(self.xray_trace_id)
+
 
         # logger.info('--- parse module/function ---')
         wrapped_names = self.lambda_handler.split('.')
         self._wrapped_module_name = wrapped_names[0]
         self._wrapped_function_name = wrapped_names[1]
-        # logger.info(self._wrapped_module_name + '  :  ' + self._wrapped_function_name)
 
