@@ -25,6 +25,8 @@ class XrayDaemonSpanExporter(SpanExporter):
         logger.debug('--- XrayDaemonSpanExporter emitter ---')
         for span in spans:
             segment = self._translate_to_segment(span)
+            if segment == '':
+                continue
             entity = json.dumps(segment)
             self._emitter.send_entity(entity)
 
@@ -55,6 +57,11 @@ class XrayDaemonSpanExporter(SpanExporter):
         parent_context = span.parent
         if parent_context:
             parent_id = "{:016x}".format(parent_context.span_id)
+            # hack
+            if parent_id == id:
+                logger.warning('++++++++ facade lambda function segment ++++')
+                return ''
+            
             segment['parent_id'] = parent_id
             segment['type'] = 'subsegment'
             # TODO: aws or remote
