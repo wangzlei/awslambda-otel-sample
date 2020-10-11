@@ -51,6 +51,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
         with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
 
+            # TODO: Lambda popagation, refactor after Nathan finish aws propagator
             if self.xray_trace_id and self.xray_trace_id != '':
                 logger.info('------ lambda propagation ------')
                 propagator = AWSXRayFormat()
@@ -102,7 +103,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self.aws_xray_daemon_address = os.environ['AWS_XRAY_DAEMON_ADDRESS']
         self._aws_xray_daemon_address = os.environ['_AWS_XRAY_DAEMON_ADDRESS']
         self._aws_xray_daemon_port = os.environ['_AWS_XRAY_DAEMON_PORT']
-        self.xray_trace_id = os.environ['_X_AMZN_TRACE_ID']
+        self.xray_trace_id = os.environ.get('_X_AMZN_TRACE_ID', '')
 
 
         # logger.info('--- parse module/function ---')
