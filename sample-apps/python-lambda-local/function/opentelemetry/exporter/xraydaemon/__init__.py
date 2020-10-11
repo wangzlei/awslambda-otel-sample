@@ -22,7 +22,7 @@ class XrayDaemonSpanExporter(SpanExporter):
 
 
     def export(self, spans) -> SpanExportResult:
-        logger.info('-----------------XrayDaemonSpanExporter emit ----------')
+        logger.debug('--- XrayDaemonSpanExporter emitter ---')
         for span in spans:
             segment = self._translate_to_segment(span)
             entity = json.dumps(segment)
@@ -33,6 +33,8 @@ class XrayDaemonSpanExporter(SpanExporter):
     def shutdown(self) -> None:
         pass
 
+    # TODO: polish this part... ...
+    # A barebone translator, from span to xray format.
     def _translate_to_segment(self, span):
         segment = {}
         segment['name'] = span.name

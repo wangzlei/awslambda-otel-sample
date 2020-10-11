@@ -8,53 +8,51 @@ from aws_xray_sdk.core import patch_all
 patch_all()
 
 from opentelemetry import trace
-# from opentelemetry.sdk.extension.aws.trace import AWSXRayIdsGenerator
 # aws propagator
+from opentelemetry.propagator.xray_id_generator import AWSXRayIdsGenerator
+
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from opentelemetry.exporter import jaeger
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 
-from opentelemetry.exporter.xraydaemon import XrayDaemonSpanExporter
-
+# instrumentor
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 
 logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
-# resource = Resource(attributes={
-#     "service.name": "Sample App"
-# })
+trace.set_tracer_provider(TracerProvider(ids_generator=AWSXRayIdsGenerator()))
+# trace.set_tracer_provider(TracerProvider())
 
-# trace.set_tracer_provider(TracerProvider(resource=resource))
-# trace.set_tracer_provider(TracerProvider(ids_generator=AWSXRayIdsGenerator()))
-trace.set_tracer_provider(TracerProvider())
 
-jaeger_exporter = jaeger.JaegerSpanExporter(
-    service_name="my-multi-processors",
-    agent_host_name="localhost",
-    agent_port=6831,
-)
 
-trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(jaeger_exporter)
-)
+# === jaeger exporter
+# from opentelemetry.exporter import jaeger
+# jaeger_exporter = jaeger.JaegerSpanExporter(
+#     service_name="my-multi-processors",
+#     agent_host_name="localhost",
+#     agent_port=6831,
+# )
+# trace.get_tracer_provider().add_span_processor(
+#     SimpleExportSpanProcessor(jaeger_exporter)
+# )
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-# otlp 
+# === otlp exporter, collector
+# from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
 # span_processor = SimpleExportSpanProcessor(otlp_exporter)
 # trace.get_tracer_provider().add_span_processor(span_processor)
 
-# xray daemon
+# === xray daemon exporter, xray daemon
+from opentelemetry.exporter.xraydaemon import XrayDaemonSpanExporter
 xrayDaemonSpanExporter = XrayDaemonSpanExporter()
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(xrayDaemonSpanExporter)
@@ -62,6 +60,7 @@ trace.get_tracer_provider().add_span_processor(
 
 tracer = trace.get_tracer(__name__)
 
+# Customer's lambda function
 def lambda_handler(event, context):
     # logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
     # logger.info('## EVENT\r' + jsonpickle.encode(event))
@@ -73,5 +72,6 @@ def lambda_handler(event, context):
 
     return "200 OK"
 
+# Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())

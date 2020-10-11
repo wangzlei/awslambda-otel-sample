@@ -17,6 +17,8 @@ import os
 
 from wrapt import ObjectProxy, wrap_function_wrapper
 
+import opentelemetry.trace as trace
+from opentelemetry.context import Context
 from opentelemetry.instrumentation.awslambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.sdk.trace import Resource
@@ -48,19 +50,21 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self._context_parser(args[1])
 
         with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
-            # TODO: propagate trace context from Lambda env variable
-            # TODO: now SpanContext is immutable, cannot update directly.
-            #span.context.trace_id = 1
-            # logger.info(span.context)
-            # self.xray_trace_id -> span.parent  context
-            logger.info('------ lambda propagation ------')
-            propagator = AWSXRayFormat()
-            new_context = propagator.extract(self.xray_trace_id, span.context)
-            logger.info(span.context)
-            logger.info(span.context.trace_id)
-            logger.info(span.context.span_id)
-            logger.info(new_context)
-            span.context = new_context
+
+            if self.xray_trace_id and self.xray_trace_id != '':
+                logger.info('------ lambda propagation ------')
+                propagator = AWSXRayFormat()
+                parent_context = propagator.extract(self.xray_trace_id, span.context)           
+                #span.context = new_context. TODO: sampled(flag) and trace state
+                new_context = trace.SpanContext(
+                    trace_id=parent_context.trace_id,
+                    span_id=span.context.span_id,
+                    trace_flags=trace.TraceFlags(1),
+                    trace_state=trace.TraceState(),
+                    is_remote=False,
+                )
+                span.context = new_context
+                span.parent = parent_context
 
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)
