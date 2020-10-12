@@ -49,7 +49,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         # instance, kwargs are empty. args[0] event, args[1] lambda context
         self._context_parser(args[1])
 
-        with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
+        with self._tracer.start_as_current_span(self.lambda_handler, kind=SpanKind.SERVER, ) as span:
 
             # TODO: Lambda popagation, refactor after Nathan finish aws propagator
             if self.xray_trace_id and self.xray_trace_id != '':
