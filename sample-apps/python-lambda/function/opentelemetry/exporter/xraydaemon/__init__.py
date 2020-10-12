@@ -57,15 +57,21 @@ class XrayDaemonSpanExporter(SpanExporter):
         parent_context = span.parent
         if parent_context:
             parent_id = "{:016x}".format(parent_context.span_id)
-            # hack
-            if parent_id == id:
-                logger.warning('++++++++ facade lambda function segment ++++')
-                return ''
             
             segment['parent_id'] = parent_id
             segment['type'] = 'subsegment'
-            # TODO: aws or remote
-            segment['namespace'] = 'aws'
+
+            # namespace
+            _origin = span.attributes._dict.get('aws.origin', '')
+            logger.info('---------------------')
+            logger.info(_origin)
+            if _origin  != 'AWS::Lambda:Function':
+                segment['namespace'] = 'aws'
+                # below need to add origin in botocore instrumentor
+                # if _origin.startswith('AWS::'):
+                #     segment['namespace'] = 'aws'
+                # else:
+                #     segment['namespace'] = 'remote'
         else:
             segment['type'] = 'segment'
 
