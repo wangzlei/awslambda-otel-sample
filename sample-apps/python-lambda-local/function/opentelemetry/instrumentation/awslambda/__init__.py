@@ -52,29 +52,29 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         with self._tracer.start_as_current_span(self.aws_lambda_function_name, kind=SpanKind.SERVER, ) as span:
 
             # TODO: Lambda popagation, refactor after Nathan finish aws propagator
-            # if self.xray_trace_id and self.xray_trace_id != '':
-            #     logger.info('------ lambda propagation ------')
-            #     propagator = AWSXRayFormat()
-            #     parent_context = propagator.extract(self.xray_trace_id, span.context)           
-            #     #span.context = new_context. TODO: sampled(flag) and trace state
-            #     new_context = trace.SpanContext(
-            #         trace_id=parent_context.trace_id,
-            #         span_id=span.context.span_id,
-            #         trace_flags=trace.TraceFlags(1),
-            #         trace_state=trace.TraceState(),
-            #         is_remote=False,
-            #     )
-            #     span.context = new_context
-            #     span.parent = parent_context
-
-            # TODO: another idea, trasparent lambda function segment
             if self.xray_trace_id and self.xray_trace_id != '':
-                logger.info('------ trasparent lambda function, like facade ------')
+                logger.info('------ lambda propagation ------')
                 propagator = AWSXRayFormat()
                 parent_context = propagator.extract(self.xray_trace_id, span.context)           
                 #span.context = new_context. TODO: sampled(flag) and trace state
-                span.context = parent_context
+                new_context = trace.SpanContext(
+                    trace_id=parent_context.trace_id,
+                    span_id=span.context.span_id,
+                    trace_flags=trace.TraceFlags(1),
+                    trace_state=trace.TraceState(),
+                    is_remote=False,
+                )
+                span.context = new_context
                 span.parent = parent_context
+
+            # TODO: another idea, trasparent lambda function segment
+            # if self.xray_trace_id and self.xray_trace_id != '':
+            #     logger.info('------ trasparent lambda function, like facade ------')
+            #     propagator = AWSXRayFormat()
+            #     parent_context = propagator.extract(self.xray_trace_id, span.context)           
+            #     #span.context = new_context. TODO: sampled(flag) and trace state
+            #     span.context = parent_context
+            #     span.parent = parent_context
 
 
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
