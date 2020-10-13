@@ -42,6 +42,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
         wrap_function_wrapper(_wrapped_module_name, _wrapped_function_name, self._lambdaPatch)
 
+    # TODO: how ?
     def _uninstrument(self, **kwargs):
         pass
 
@@ -53,7 +54,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
             # TODO: Lambda popagation, refactor after Nathan finish aws propagator
             if self.xray_trace_id and self.xray_trace_id != '':
-                logger.info('------ lambda propagation ------')
+                logger.debug('------ lambda propagation ------')
                 propagator = AWSXRayFormat()
                 parent_context = propagator.extract(self.xray_trace_id, span.context)           
                 #span.context = new_context. TODO: sampled(flag) and trace state
@@ -67,27 +68,14 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
                 span.context = new_context
                 span.parent = parent_context
 
-            # TODO: another idea, trasparent lambda function segment
-            # if self.xray_trace_id and self.xray_trace_id != '':
-            #     logger.info('------ trasparent lambda function, like facade ------')
-            #     propagator = AWSXRayFormat()
-            #     parent_context = propagator.extract(self.xray_trace_id, span.context)           
-            #     #span.context = new_context. TODO: sampled(flag) and trace state
-            #     span.context = parent_context
-            #     span.parent = parent_context
-
-
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)
             # TODO: may need an aws convension origin
             span.set_attribute('aws.origin', 'AWS::Lambda:Function')
 
-            # TODO: move to lambda resource plugin
+            # TODO: 'faas.id' is a trouble, cannot be extracted in lambda resource detector
             new_resource = Resource(
                 attributes = {
-                    'cloud.region': self.aws_region,
-                    'cloud.provider': 'aws',
-                    'faas.name': self.lambda_handler,
                     'faas.id': self._ctx_invoked_function_arn,
                 }
             )
@@ -100,24 +88,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         # logger.info('--- context ---')
         self._ctx_invoked_function_arn = lambda_context.invoked_function_arn
         self.ctx_aws_request_id = lambda_context.aws_request_id
-        logger.info(self.ctx_aws_request_id)
-        logger.info(self._ctx_invoked_function_arn)
 
         # logger.info('--- env variables ---')
         self.lambda_handler = os.environ['_HANDLER']
-        self.aws_region = os.environ['AWS_REGION']
-        self.aws_lambda_function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
-        self.aws_lambda_log_group_name = os.environ['AWS_LAMBDA_LOG_GROUP_NAME']
-        self.aws_lambda_log_stream_name = os.environ['AWS_LAMBDA_LOG_STREAM_NAME']
-        self.aws_xray_context_missing = os.environ['AWS_XRAY_CONTEXT_MISSING']
-        self.aws_xray_daemon_address = os.environ['AWS_XRAY_DAEMON_ADDRESS']
-        self._aws_xray_daemon_address = os.environ['_AWS_XRAY_DAEMON_ADDRESS']
-        self._aws_xray_daemon_port = os.environ['_AWS_XRAY_DAEMON_PORT']
         self.xray_trace_id = os.environ.get('_X_AMZN_TRACE_ID', '')
-
-
-        # logger.info('--- parse module/function ---')
-        wrapped_names = self.lambda_handler.split('.')
-        self._wrapped_module_name = wrapped_names[0]
-        self._wrapped_function_name = wrapped_names[1]
-

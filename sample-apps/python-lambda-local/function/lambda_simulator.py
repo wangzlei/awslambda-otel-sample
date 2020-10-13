@@ -20,7 +20,7 @@ from lambda_function import lambda_handler
 
 # add env var '_X_AMZN_TRACE_ID' to mock active xray in lambda, will propagate trace from upstream, else lambda function span is root.
 def _enable_lambda_propagation():
-    logger.info('--- mock active  ---')
+    logger.info('--- mock lambda active  ---')
     trace_header_str = TraceHeader(
         xray_recorder.current_segment().trace_id,
         xray_recorder.current_segment().id,
@@ -35,8 +35,8 @@ class MockLambdaContext(object):
 # simulate lambda function invocation in local
 def main():
     lambdaContext = MockLambdaContext()
-    lambdaContext.invoked_function_arn = "arn://sdfasdfasdfas"
-    lambdaContext.aws_request_id = "aws_request_id"
+    lambdaContext.invoked_function_arn = "arn://mock-lambda-function-arn"
+    lambdaContext.aws_request_id = "mock_aws_request_id"
     
     # mock a lambda invocation segment
     xray_recorder.begin_segment('AWS::Lambda::Invocation')
