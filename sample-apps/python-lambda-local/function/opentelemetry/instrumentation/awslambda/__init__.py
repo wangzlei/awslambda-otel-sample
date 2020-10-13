@@ -35,6 +35,8 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             __name__, __version__, kwargs.get("tracer_provider")
         )
 
+        self._tracer_provider = kwargs.get("tracer_provider")
+
         lambda_handler = os.environ['_HANDLER']
         wrapped_names = lambda_handler.split('.')
         _wrapped_module_name = wrapped_names[0]
@@ -82,6 +84,9 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             span.resource = new_resource.merge(span.resource)
 
             result = original_func(*args, **kwargs)
+
+            # force_flush before lambda function quit
+            self._tracer_provider.force_flush()
             return result
 
     def _context_parser(self, lambda_context):
