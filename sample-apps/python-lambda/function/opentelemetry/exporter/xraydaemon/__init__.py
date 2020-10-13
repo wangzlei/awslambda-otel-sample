@@ -63,11 +63,9 @@ class XrayDaemonSpanExporter(SpanExporter):
 
             # namespace
             _origin = span.attributes._dict.get('aws.origin', '')
-            logger.info('---------------------')
-            logger.info(_origin)
             if _origin  != 'AWS::Lambda:Function':
                 segment['namespace'] = 'aws'
-                # below need to add origin in botocore instrumentor
+                # need to add origin in botocore instrumentor
                 # if _origin.startswith('AWS::'):
                 #     segment['namespace'] = 'aws'
                 # else:

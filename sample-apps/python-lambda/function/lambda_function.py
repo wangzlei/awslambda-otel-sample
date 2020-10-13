@@ -11,7 +11,11 @@ from opentelemetry import trace
 # aws propagator
 from opentelemetry.propagator.xray_id_generator import AWSXRayIdsGenerator
 
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    Resource,
+    OTELResourceDetector,
+    get_aggregated_resources,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -25,7 +29,12 @@ from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-trace.set_tracer_provider(TracerProvider(ids_generator=AWSXRayIdsGenerator()))
+from opentelemetry.resource import AwsLambdaResourceDetector
+# resource looks weird because get_aggregated_resources has bug, cannot merge _DEFAULT otel attributes
+trace.set_tracer_provider(TracerProvider(
+    ids_generator=AWSXRayIdsGenerator(), 
+    resource=Resource.create().merge(AwsLambdaResourceDetector().detect())),
+)
 # trace.set_tracer_provider(TracerProvider())
 
 
