@@ -60,24 +60,21 @@ class AWSXRayFormat(TextMapPropagator):
 
     def extract(
         self,
-        # get_from_carrier: Getter[TextMapPropagatorT],
-        # carrier: TextMapPropagatorT,
-        trace_header,
+        get_from_carrier: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        # if not carrier:
-        #     raise ValueError('Could not extract from carrier: %s'.format(carrier))
+        if not carrier:
+            raise ValueError(("Could not extract from carrier: %s", carrier))
 
-        # trace_header = get_from_carrier(carrier, self.TRACE_HEADER_KEY)
+        trace_header = get_from_carrier(carrier, self.TRACE_HEADER_KEY)
 
         if not trace_header or trace_header == '':
-            # return trace.set_span_in_context(trace.INVALID_SPAN)
-            return context
+            return trace.set_span_in_context(trace.INVALID_SPAN)
 
         trace_id = trace.INVALID_TRACE_ID
         span_id = trace.INVALID_SPAN_ID
         sampled = False
-        flags = None
 
         next_kv_pair_start = 0
 
@@ -86,7 +83,7 @@ class AWSXRayFormat(TextMapPropagator):
                 kv_pair_delimiter_index = trace_header.index(self.KV_PAIR_DELIMITER, next_kv_pair_start)
                 kv_pair_subset = trace_header[next_kv_pair_start:kv_pair_delimiter_index]
                 next_kv_pair_start = kv_pair_delimiter_index + 1
-            except ValueError as e:
+            except ValueError as _:
                 kv_pair_subset = trace_header[next_kv_pair_start:]
                 next_kv_pair_start = len(trace_header)
 
@@ -94,18 +91,18 @@ class AWSXRayFormat(TextMapPropagator):
 
             try:
                 key_and_value_delimiter_index = stripped_kv_pair.index(self.KEY_AND_VALUE_DELIMITER)
-            except ValueError as e:
-                _logger.error("Error parsing X-Ray trace header. Invalid key value pair: %s. Returning INVALID span context.".format(kv_pair_subset))
+            except ValueError as _:
+                _logger.error(("Error parsing X-Ray trace header. Invalid key value pair: %s. Returning INVALID span context.", kv_pair_subset))
                 return trace.set_span_in_context(trace.INVALID_SPAN)
 
             value = stripped_kv_pair[key_and_value_delimiter_index + 1:]
 
-            if (stripped_kv_pair.startswith(self.TRACE_ID_KEY)):
+            if stripped_kv_pair.startswith(self.TRACE_ID_KEY):
                 if (len(value) != self.TRACE_ID_LENGTH or
                     not value.startswith(self.TRACE_ID_VERSION) or
                     value[self.TRACE_ID_DELIMITER_INDEX_1] != self.TRACE_ID_DELIMITER or
                     value[self.TRACE_ID_DELIMITER_INDEX_2] != self.TRACE_ID_DELIMITER):
-                    _logger.error("Invalid TraceId in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.".format(self.TRACE_HEADER_KEY, trace_header))
+                    _logger.error(("Invalid TraceId in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.", self.TRACE_HEADER_KEY, trace_header))
                     return trace.INVALID_SPAN_CONTEXT
 
                 timestamp_subset = value[self.TRACE_ID_DELIMITER_INDEX_1 + 1: self.TRACE_ID_DELIMITER_INDEX_2]
@@ -113,7 +110,7 @@ class AWSXRayFormat(TextMapPropagator):
                 trace_id = int(timestamp_subset + unique_id_subset, 16)
             elif stripped_kv_pair.startswith(self.PARENT_ID_KEY):
                 if len(value) != self.PARENT_ID_LENGTH:
-                    _logger.error("Invalid ParentId in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.".format(self.TRACE_HEADER_KEY, trace_header))
+                    _logger.error(("Invalid ParentId in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.", self.TRACE_HEADER_KEY, trace_header))
                     return trace.INVALID_SPAN_CONTEXT
 
                 span_id = int(value, 16)
@@ -133,7 +130,7 @@ class AWSXRayFormat(TextMapPropagator):
                         is_sampled_flag_valid = False
 
                 if not is_sampled_flag_valid:
-                    _logger.error("Invalid Sampling flag in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.".format(self.TRACE_HEADER_KEY, trace_header))
+                    _logger.error(("Invalid Sampling flag in X-Ray trace header: '%s' with value '%s'. Returning INVALID span context.", self.TRACE_HEADER_KEY, trace_header))
                     return trace.INVALID_SPAN_CONTEXT
 
         options = 0
@@ -151,13 +148,12 @@ class AWSXRayFormat(TextMapPropagator):
         if not span_context.is_valid:
             return context
 
-        # return trace.set_span_in_context(
-        #     trace.DefaultSpan(
-        #         span_context
-        #     ),
-        #     context=context
-        # )
-        return span_context
+        return trace.set_span_in_context(
+            trace.DefaultSpan(
+                span_context
+            ),
+            context=context
+        )
 
     def inject(
         self,
