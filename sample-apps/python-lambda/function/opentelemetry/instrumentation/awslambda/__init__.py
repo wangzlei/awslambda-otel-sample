@@ -35,6 +35,8 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             __name__, __version__, kwargs.get("tracer_provider")
         )
 
+        self._tracer_provider = kwargs.get("tracer_provider")
+
         lambda_handler = os.environ['_HANDLER']
         wrapped_names = lambda_handler.split('.')
         _wrapped_module_name = wrapped_names[0]
@@ -50,24 +52,10 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         # instance, kwargs are empty. args[0] event, args[1] lambda context
         self._context_parser(args[1])
 
-        with self._tracer.start_as_current_span(self.lambda_handler, kind=SpanKind.SERVER, ) as span:
-
-            # TODO: Lambda popagation, refactor after Nathan finish aws propagator
-            if self.xray_trace_id and self.xray_trace_id != '':
-                logger.debug('------ lambda propagation ------')
-                propagator = AWSXRayFormat()
-                parent_context = propagator.extract(self.xray_trace_id, span.context)           
-                #span.context = new_context. TODO: sampled(flag) and trace state
-                new_context = trace.SpanContext(
-                    trace_id=parent_context.trace_id,
-                    span_id=span.context.span_id,
-                    trace_flags=trace.TraceFlags(1),
-                    trace_state=trace.TraceState(),
-                    is_remote=False,
-                )
-                span.context = new_context
-                span.parent = parent_context
-
+        # lambda propagation
+        propagator = AWSXRayFormat()
+        parent_context = propagator.extract(dict.__getitem__, { 'X-Amzn-Trace-Id': self.xray_trace_id })
+        with self._tracer.start_as_current_span(self.lambda_handler, context=parent_context, kind=SpanKind.SERVER) as span:
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', self.ctx_aws_request_id)
             # TODO: may need an aws convension origin
@@ -82,6 +70,9 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             span.resource = new_resource.merge(span.resource)
 
             result = original_func(*args, **kwargs)
+
+            # force_flush before lambda function quit
+            self._tracer_provider.force_flush()
             return result
 
     def _context_parser(self, lambda_context):
