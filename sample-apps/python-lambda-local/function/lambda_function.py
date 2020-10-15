@@ -1,8 +1,11 @@
 import os
 import logging
 import jsonpickle
-import boto3
 
+logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+import boto3
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 patch_all()
@@ -21,13 +24,6 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-
-# instrumentor
-from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
-
-logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 from opentelemetry.resource import AwsLambdaResourceDetector
 # resource looks weird because get_aggregated_resources has bug, cannot merge _DEFAULT otel attributes
@@ -82,5 +78,7 @@ def lambda_handler(event, context):
     return "200 OK"
 
 # Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
+from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
