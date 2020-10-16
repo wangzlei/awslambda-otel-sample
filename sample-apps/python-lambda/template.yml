@@ -5,12 +5,15 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: lambda_function.lambda_handler
-      Runtime: python3.7
+      Handler: lambda_otel_wrapper.handler
+      Runtime: python3.8
       CodeUri: function/.
       Description: Call the AWS Lambda API
       MemorySize: 512
       Timeout: 30
+      Environment:
+        Variables:
+          LAMBDA_HANDLER: lambda_function.lambda_handler
       Policies:
         - AdministratorAccess
       Tracing: Active

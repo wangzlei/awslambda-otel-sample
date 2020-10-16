@@ -81,5 +81,6 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self.ctx_aws_request_id = lambda_context.aws_request_id
 
         # logger.info('--- env variables ---')
-        self.lambda_handler = os.environ['_HANDLER']
+        # self.lambda_handler = os.environ['_HANDLER']
+        self.lambda_handler = os.environ.get("LAMBDA_HANDLER", os.environ.get("_HANDLER"))
         self.xray_trace_id = os.environ.get('_X_AMZN_TRACE_ID', '')
