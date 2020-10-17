@@ -73,6 +73,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
             # force_flush before lambda function quit
             self._tracer_provider.force_flush()
+            logger.info('------- force_flush done --------')
             return result
 
     def _context_parser(self, lambda_context):

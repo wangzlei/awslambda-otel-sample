@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 import boto3
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
-patch_all()
+# patch_all()
 
 from opentelemetry import trace
 # aws propagator
@@ -24,6 +24,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
+    BatchExportSpanProcessor,
 )
 
 from opentelemetry.resource import AwsLambdaResourceDetector
@@ -48,7 +49,7 @@ trace.set_tracer_provider(TracerProvider(
 # )
 
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
+    BatchExportSpanProcessor(ConsoleSpanExporter())
 )
 
 # === otlp exporter, collector
@@ -58,10 +59,11 @@ trace.get_tracer_provider().add_span_processor(
 # trace.get_tracer_provider().add_span_processor(span_processor)
 
 # === xray daemon exporter, xray daemon
-from opentelemetry.exporter.xraydaemon import XrayDaemonSpanExporter
-xrayDaemonSpanExporter = XrayDaemonSpanExporter()
+# TODO: force_flush has bug, 1) force_flush does not work; 2) boto3 re-instrument interrupt
+from opentelemetry.exporter.xray import XraySpanExporter
+xraySpanExporter = XraySpanExporter()
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(xrayDaemonSpanExporter)
+    SimpleExportSpanProcessor(xraySpanExporter)
 )
 
 tracer = trace.get_tracer(__name__)
@@ -95,6 +97,6 @@ handler = getattr(handler_module, handler_name)
 
 # Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
-from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
 AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())

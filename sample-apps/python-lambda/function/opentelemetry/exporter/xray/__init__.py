@@ -1,4 +1,5 @@
 import logging
+from opentelemetry import trace
 import opentelemetry.trace as trace_api
 import json
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
@@ -9,26 +10,42 @@ import binascii
 import os
 import random
 import datetime
+import boto3
+from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 
 logger = logging.getLogger(__name__)
 
-class XrayDaemonSpanExporter(SpanExporter):
+class XraySpanExporter(SpanExporter):
     TRACE_ID_VERSION = "1"
     TRACE_ID_DELIMITER = "-"
     TRACE_ID_FIRST_PART_LENGTH = 8
 
     def __init__(self):
         self._emitter = UDPEmitter()
+        self._xray_client = boto3.client('xray')
 
 
     def export(self, spans) -> SpanExportResult:
-        logger.debug('--- XrayDaemonSpanExporter emitter ---')
+        logger.info('--- XraySpanExporter emitter ---')
+        BotocoreInstrumentor().uninstrument(tracer_provider=trace.get_tracer_provider())
+
+        # TODO: merge segments to one request, else batch processor does not make sense
         for span in spans:
             segment = self._translate_to_segment(span)
             if segment == '':
                 continue
             entity = json.dumps(segment)
-            self._emitter.send_entity(entity)
+
+            # emit segment to daemon or xray ... 
+            # self._emitter.send_entity(entity)
+            logger.info(entity)
+            response = self._xray_client.put_trace_segments(
+                TraceSegmentDocuments=[
+                    entity,
+                ]
+            )
+            logger.info(response)
+        BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 
         return SpanExportResult.SUCCESS 
 
