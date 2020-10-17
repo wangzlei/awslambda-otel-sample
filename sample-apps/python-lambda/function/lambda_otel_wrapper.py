@@ -59,11 +59,11 @@ trace.get_tracer_provider().add_span_processor(
 # trace.get_tracer_provider().add_span_processor(span_processor)
 
 # === xray daemon exporter, xray daemon
-# TODO: force_flush has bug, 1) force_flush does not work; 2) boto3 re-instrument interrupt
+# TODO: boto3 re-instrument race condition, if we can call emit only once at the end of force_flush? (BatchProcessor has bug)
 from opentelemetry.exporter.xray import XraySpanExporter
 xraySpanExporter = XraySpanExporter()
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(xraySpanExporter)
+    BatchExportSpanProcessor(xraySpanExporter)
 )
 
 tracer = trace.get_tracer(__name__)
