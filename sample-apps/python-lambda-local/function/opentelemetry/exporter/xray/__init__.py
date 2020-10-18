@@ -39,14 +39,14 @@ class XraySpanExporter(SpanExporter):
             # self._emitter.send_entity(entity)
             logger.info(entity)
 
-            # TODO: race condition
-            BotocoreInstrumentor().uninstrument(tracer_provider=trace.get_tracer_provider())
+            # TODO: 2 options: 1) shield xray in boto3 instrumentor; 2) uninstrument boto3 before emmitting, race condition.
+            # BotocoreInstrumentor().uninstrument(tracer_provider=trace.get_tracer_provider())
             response = self._xray_client.put_trace_segments(
                 TraceSegmentDocuments=[
                     entity,
                 ]
             )
-            BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+            # BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
             logger.info(response)
         
         return SpanExportResult.SUCCESS 

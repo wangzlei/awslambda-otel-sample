@@ -1,6 +1,6 @@
 import os
 import logging
-# import jsonpickle
+import jsonpickle
 import boto3
 
 # Customer's lambda function

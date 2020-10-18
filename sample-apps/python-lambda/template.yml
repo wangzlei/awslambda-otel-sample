@@ -22,8 +22,9 @@ Resources:
   libs:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: blank-python-lib
+      LayerName: aws-observability-python
       Description: Lambda OpenTelemetry Python demo.
       ContentUri: package/.
       CompatibleRuntimes:
         - python3.8
+        - python3.7
