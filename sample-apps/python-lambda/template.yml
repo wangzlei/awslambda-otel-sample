@@ -5,7 +5,7 @@ Resources:
   function:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: lambda_otel_wrapper.handler
+      Handler: aws_observability_wrapper.handler
       Runtime: python3.8
       CodeUri: function/.
       Description: Call the AWS Lambda API

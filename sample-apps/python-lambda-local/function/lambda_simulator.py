@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # lambdaCtxDict = json.loads(s=lambdaCtxJson)
 
 # Mock lambda environment variables, except trace header...
-envDict = {"AWS_EXECUTION_ENV": "AWS_Lambda_python3.8", "AWS_LAMBDA_FUNCTION_MEMORY_SIZE": "128", "AWS_LAMBDA_FUNCTION_NAME": "python-lambda-function-YI0MC6JQ4BMR", "AWS_LAMBDA_FUNCTION_VERSION": "$LATEST", "AWS_LAMBDA_LOG_GROUP_NAME": "/aws/lambda/python-lambda-function-YI0MC6JQ4BMR", "AWS_LAMBDA_LOG_STREAM_NAME": "2020/10/06/[$LATEST]33f5c2beeb3a46dda4e9712885809a22", "AWS_LAMBDA_RUNTIME_API": "127.0.0.1:9001", "AWS_REGION": "us-east-1", "AWS_XRAY_CONTEXT_MISSING": "LOG_ERROR", "AWS_XRAY_DAEMON_ADDRESS": "localhost:2000", "LAMBDA_RUNTIME_DIR": "/var/runtime", "LAMBDA_TASK_ROOT": "/var/task", "LANG": "en_US.UTF-8", "LD_LIBRARY_PATH": "/var/lang/lib:/lib64:/usr/lib64:/var/runtime:/var/runtime/lib:/var/task:/var/task/lib:/opt/lib", "PATH": "/var/lang/bin:/usr/local/bin:/usr/bin/:/bin:/opt/bin", "PWD": "/var/task", "PYTHONPATH": "/var/runtime", "SHLVL": "0", "TZ": ":UTC", "_AWS_XRAY_DAEMON_ADDRESS": "169.254.79.2", "_AWS_XRAY_DAEMON_PORT": "2000", "_HANDLER": "lambda_otel_wrapper.handler"}
+envDict = {"AWS_EXECUTION_ENV": "AWS_Lambda_python3.8", "AWS_LAMBDA_FUNCTION_MEMORY_SIZE": "128", "AWS_LAMBDA_FUNCTION_NAME": "python-lambda-function-YI0MC6JQ4BMR", "AWS_LAMBDA_FUNCTION_VERSION": "$LATEST", "AWS_LAMBDA_LOG_GROUP_NAME": "/aws/lambda/python-lambda-function-YI0MC6JQ4BMR", "AWS_LAMBDA_LOG_STREAM_NAME": "2020/10/06/[$LATEST]33f5c2beeb3a46dda4e9712885809a22", "AWS_LAMBDA_RUNTIME_API": "127.0.0.1:9001", "AWS_REGION": "us-east-1", "AWS_XRAY_CONTEXT_MISSING": "LOG_ERROR", "AWS_XRAY_DAEMON_ADDRESS": "localhost:2000", "LAMBDA_RUNTIME_DIR": "/var/runtime", "LAMBDA_TASK_ROOT": "/var/task", "LANG": "en_US.UTF-8", "LD_LIBRARY_PATH": "/var/lang/lib:/lib64:/usr/lib64:/var/runtime:/var/runtime/lib:/var/task:/var/task/lib:/opt/lib", "PATH": "/var/lang/bin:/usr/local/bin:/usr/bin/:/bin:/opt/bin", "PWD": "/var/task", "PYTHONPATH": "/var/runtime", "SHLVL": "0", "TZ": ":UTC", "_AWS_XRAY_DAEMON_ADDRESS": "169.254.79.2", "_AWS_XRAY_DAEMON_PORT": "2000", "_HANDLER": "aws_observability_wrapper.handler"}
 for k, v in envDict.items():
     os.environ[k] = v
 
@@ -34,7 +34,7 @@ _enable_lambda_propagation()
 
 # from lambda_function import lambda_handler 
 os.environ['LAMBDA_HANDLER'] = 'lambda_function.lambda_handler'
-from lambda_otel_wrapper import handler
+from aws_observability_wrapper import handler
     
 
 class MockLambdaContext(object):

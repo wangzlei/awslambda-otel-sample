@@ -96,6 +96,8 @@ handler = getattr(handler_module, handler_name)
 
 
 # Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
+from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+AioHttpClientInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 from opentelemetry.instrumentation.awslambda import AwsLambdaInstrumentor
