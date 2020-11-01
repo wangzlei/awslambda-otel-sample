@@ -33,7 +33,7 @@ def _enable_lambda_propagation():
 _enable_lambda_propagation()
 
 # from lambda_function import lambda_handler 
-os.environ['LAMBDA_HANDLER'] = 'lambda_function.lambda_handler'
+os.environ['ORIG_HANDLER'] = 'lambda_function.lambda_handler'
 from aws_observability_wrapper import handler
     
 

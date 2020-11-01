@@ -6,7 +6,7 @@ from opentelemetry.sdk.resources import (
 
 class AwsLambdaResourceDetector(ResourceDetector):
     def detect(self) -> "Resource":
-        lambda_handler = os.environ.get("LAMBDA_HANDLER", os.environ.get("_HANDLER"))
+        lambda_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
         aws_region = os.environ['AWS_REGION']
         env_resource_map = {
             'cloud.region': aws_region,

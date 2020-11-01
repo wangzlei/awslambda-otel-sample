@@ -80,14 +80,14 @@ class HandlerError(Exception):
     pass
 
 
-path = os.environ.get("LAMBDA_HANDLER", None)
+path = os.environ.get("ORIG_HANDLER", None)
 if path is None:
     raise HandlerError(
-        "LAMBDA_HANDLER is not defined."
+        "ORIG_HANDLER is not defined."
     )
 parts = path.rsplit(".", 1)
 if len(parts) != 2:
-    raise HandlerError("Value %s for LAMBDA_HANDLER has invalid format." % path)
+    raise HandlerError("Value %s for ORIG_HANDLER has invalid format." % path)
 
 (mod_name, handler_name) = parts
 modified_mod_name = modify_module_name(mod_name)
