@@ -59,7 +59,7 @@ otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
 span_processor = SimpleExportSpanProcessor(otlp_exporter)
 trace.get_tracer_provider().add_span_processor(span_processor)
 
-# === xray daemon exporter, xray daemon
+# === xray/xraydaemon exporter
 # from opentelemetry.exporter.xray import XraySpanExporter
 # xraySpanExporter = XraySpanExporter()
 # trace.get_tracer_provider().add_span_processor(
@@ -97,9 +97,8 @@ handler = getattr(handler_module, handler_name)
 
 # Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
-AioHttpClientInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+AioHttpClientInstrumentor().instrument()
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
-AwsLambdaInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
-AwsLambdaInstrumentor().uninstrument(tracer_provider=trace.get_tracer_provider())
+AwsLambdaInstrumentor().instrument()

@@ -81,7 +81,7 @@ class XraySpanExporter(SpanExporter):
             segment['parent_id'] = parent_id
             segment['type'] = 'subsegment'
 
-            # namespace
+            # TODO: namespace
             _origin = span.attributes._dict.get('aws.origin', '')
             if _origin  != 'AWS::Lambda:Function':
                 segment['namespace'] = 'aws'
@@ -91,6 +91,7 @@ class XraySpanExporter(SpanExporter):
                 # else:
                 #     segment['namespace'] = 'remote'
         else:
+            # actually in Lambda case there is no segment
             segment['type'] = 'segment'
 
         if 'aws.origin' in span.attributes._dict:
