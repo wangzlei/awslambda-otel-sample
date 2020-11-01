@@ -45,7 +45,7 @@ import os
 from wrapt import wrap_function_wrapper
 from opentelemetry.instrumentation.aws_lambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from opentelemetry.trace import SpanKind, get_tracer
+from opentelemetry.trace import SpanKind, get_tracer, get_tracer_provider
 from opentelemetry.instrumentation.utils import unwrap
 
 # TODO: aws propagator
@@ -59,7 +59,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             __name__, __version__, kwargs.get("tracer_provider")
         )
 
-        self._tracer_provider = kwargs.get("tracer_provider")
+        self._tracer_provider = kwargs.get("tracer_provider", get_tracer_provider())
 
         lambda_handler = os.environ.get("_HANDLER")
         wrapped_names = lambda_handler.split('.')
