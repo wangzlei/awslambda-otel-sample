@@ -1,5 +1,3 @@
-
 jsonpickle==1.3
 aws-xray-sdk==2.4.3
 aiohttp
-aws-xray-sdk==2.4.3

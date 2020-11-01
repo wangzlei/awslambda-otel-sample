@@ -34,8 +34,6 @@ trace.set_tracer_provider(TracerProvider(
     ids_generator=AWSXRayIdsGenerator(), 
     resource=resource,)
 )
-# trace.set_tracer_provider(TracerProvider())
-
 
 
 # === jaeger exporter
