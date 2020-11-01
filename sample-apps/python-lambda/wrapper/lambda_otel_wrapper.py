@@ -1,7 +1,6 @@
 from __future__ import absolute_import  # need that??
 import os
 import logging
-import jsonpickle
 
 logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,18 +52,18 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 # === otlp exporter, collector
-# from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
-# otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
-# span_processor = SimpleExportSpanProcessor(otlp_exporter)
-# trace.get_tracer_provider().add_span_processor(span_processor)
+from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
+span_processor = SimpleExportSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
 # === xray daemon exporter, xray daemon
 # TODO: boto3 re-instrument race condition, if we can call emit only once at the end of force_flush? (BatchProcessor has bug)
-from opentelemetry.exporter.xray import XraySpanExporter
-xraySpanExporter = XraySpanExporter()
-trace.get_tracer_provider().add_span_processor(
-    BatchExportSpanProcessor(xraySpanExporter)
-)
+# from opentelemetry.exporter.xray import XraySpanExporter
+# xraySpanExporter = XraySpanExporter()
+# trace.get_tracer_provider().add_span_processor(
+#     BatchExportSpanProcessor(xraySpanExporter)
+# )
 
 tracer = trace.get_tracer(__name__)
 
@@ -80,14 +79,14 @@ class HandlerError(Exception):
     pass
 
 
-path = os.environ.get("LAMBDA_HANDLER", None)
+path = os.environ.get("ORIG_HANDLER", None)
 if path is None:
     raise HandlerError(
-        "LAMBDA_HANDLER is not defined."
+        "ORIG_HANDLER is not defined."
     )
 parts = path.rsplit(".", 1)
 if len(parts) != 2:
-    raise HandlerError("Value %s for LAMBDA_HANDLER has invalid format." % path)
+    raise HandlerError("Value %s for ORIG_HANDLER has invalid format." % path)
 
 (mod_name, handler_name) = parts
 modified_mod_name = modify_module_name(mod_name)

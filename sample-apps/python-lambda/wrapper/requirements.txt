@@ -1,9 +1,5 @@
+
 jsonpickle==1.3
 aws-xray-sdk==2.4.3
-boto3
 aiohttp
-/Users/wangzl/workspace/openTelemetry/opentelemetry-python/opentelemetry-api
-/Users/wangzl/workspace/openTelemetry/opentelemetry-python/opentelemetry-sdk
-/Users/wangzl/workspace/openTelemetry/opentelemetry-python/opentelemetry-instrumentation
-/Users/wangzl/workspace/openTelemetry/opentelemetry-python/instrumentation/opentelemetry-instrumentation-botocore
-/Users/wangzl/workspace/openTelemetry/opentelemetry-python/instrumentation/opentelemetry-instrumentation-aiohttp-client
+aws-xray-sdk==2.4.3

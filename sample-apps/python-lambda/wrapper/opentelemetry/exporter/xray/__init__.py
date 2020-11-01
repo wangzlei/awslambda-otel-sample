@@ -12,6 +12,7 @@ import random
 import datetime
 import boto3
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+from opentelemetry.context import attach, detach, set_value
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class XraySpanExporter(SpanExporter):
         self._emitter = UDPEmitter()
         self._xray_client = boto3.client('xray')
 
-
+    # TODO: sampled or not
     def export(self, spans) -> SpanExportResult:
         logger.info('--- XraySpanExporter emitter ---')
         
@@ -39,14 +40,14 @@ class XraySpanExporter(SpanExporter):
             # self._emitter.send_entity(entity)
             logger.info(entity)
 
-            # TODO: 2 options: 1) shield xray in boto3 instrumentor; 2) uninstrument boto3 before emmitting, race condition.
-            # BotocoreInstrumentor().uninstrument(tracer_provider=trace.get_tracer_provider())
+            # suppress boto3 instumentation
+            token = attach(set_value("suppress_instrumentation", True))
             response = self._xray_client.put_trace_segments(
                 TraceSegmentDocuments=[
                     entity,
                 ]
             )
-            # BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+            detach(token)
             logger.info(response)
         
         return SpanExportResult.SUCCESS 
