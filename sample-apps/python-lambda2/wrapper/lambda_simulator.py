@@ -32,6 +32,9 @@ def _enable_lambda_propagation():
 
 _enable_lambda_propagation()
 
+# use AOC, disable in-process exporter
+os.environ['INPROCESS_EXPORTER'] = 'false'
+
 # from lambda_function import lambda_handler 
 os.environ['ORIG_HANDLER'] = 'lambda_function.lambda_handler'
 from aws_observability_wrapper import handler

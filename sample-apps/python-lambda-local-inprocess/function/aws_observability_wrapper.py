@@ -33,9 +33,6 @@ trace.set_tracer_provider(TracerProvider(
     ids_generator=AWSXRayIdsGenerator(), 
     resource=Resource.create().merge(AwsLambdaResourceDetector().detect())),
 )
-# trace.set_tracer_provider(TracerProvider())
-
-
 
 # === jaeger exporter
 # from opentelemetry.exporter import jaeger

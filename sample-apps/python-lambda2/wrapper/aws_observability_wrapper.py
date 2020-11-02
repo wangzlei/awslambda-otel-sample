@@ -51,19 +51,24 @@ trace.get_tracer_provider().add_span_processor(
     BatchExportSpanProcessor(ConsoleSpanExporter())
 )
 
-# === otlp exporter, collector
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
-otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
-# otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
-span_processor = SimpleExportSpanProcessor(otlp_exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+in_process = os.environ.get("INPROCESS_EXPORTER", None)
+if in_process is None or in_process.lower() != 'true':
+    # === otlp exporter, collector
+    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
+    # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+    span_processor = BatchExportSpanProcessor(otlp_exporter)
+    trace.get_tracer_provider().add_span_processor(span_processor)
+    logger.info("OTLP exporter is ready ...")
+else:
+    # === xray/xraydaemon exporter
+    from opentelemetry.exporter.xray import XraySpanExporter
+    xraySpanExporter = XraySpanExporter()
+    trace.get_tracer_provider().add_span_processor(
+        BatchExportSpanProcessor(xraySpanExporter)
+    )
+    logger.info("AWS Xray in-process exporter is ready ...")
 
-# === xray/xraydaemon exporter
-# from opentelemetry.exporter.xray import XraySpanExporter
-# xraySpanExporter = XraySpanExporter()
-# trace.get_tracer_provider().add_span_processor(
-#     BatchExportSpanProcessor(xraySpanExporter)
-# )
 
 tracer = trace.get_tracer(__name__)
 
