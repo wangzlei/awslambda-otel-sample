@@ -23,17 +23,20 @@ Usage
 .. code:: python
 
     import aiohttp
-    from opentelemetry.instrumentation.aiohttp_client import (
-        AioHttpClientInstrumentor
+    from opentelemetry.instrumentation.aws_lambda import (
+        AwsLambdaInstrumentor
     )
 
     # Enable instrumentation
-    AioHttpClientInstrumentor().instrument()
+    AwsLambdaInstrumentor().instrument()
 
-    # Create a session and make an HTTP get request
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            await response.text()
+    # Create Lambda handler function in AWS Lambda
+    def lambda_handler(event, context):
+        s3 = boto3.resource('s3')
+        for bucket in s3.buckets.all():
+            print(bucket.name)
+
+        return "200 OK"
 
 API
 ---
@@ -47,6 +50,7 @@ from opentelemetry.instrumentation.aws_lambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.trace import SpanKind, get_tracer, get_tracer_provider
 from opentelemetry.instrumentation.utils import unwrap
+from importlib import import_module
 
 # TODO: aws propagator
 from opentelemetry.instrumentation.aws_lambda.tmp.propagator import AWSXRayFormat
@@ -59,7 +63,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             __name__, __version__, kwargs.get("tracer_provider")
         )
 
-        self._tracer_provider = kwargs.get("tracer_provider", get_tracer_provider())
+        self._tracer_provider = get_tracer_provider()
 
         lambda_handler = os.environ.get("_HANDLER")
         wrapped_names = lambda_handler.split('.')
@@ -68,9 +72,8 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
         wrap_function_wrapper(self._wrapped_module_name, self._wrapped_function_name, self._functionPatch)
 
-    # TODO: need to test
     def _uninstrument(self, **kwargs):
-        unwrap(self._wrapped_module_name, self._wrapped_function_name)
+        unwrap(import_module(self._wrapped_module_name), self._wrapped_function_name)
 
     def _functionPatch(self, original_func, instance, args, kwargs):
         lambda_context = args[1]
@@ -85,10 +88,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         with self._tracer.start_as_current_span(orig_handler, context=parent_context, kind=SpanKind.CLIENT) as span:
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute('faas.execution', ctx_aws_request_id)
-            # TODO: faas.id is resource attribute in spec
             span.set_attribute('faas.id', ctx_invoked_function_arn)
-            # TODO: aws convension
-            span.set_attribute('aws.origin', 'AWS::Lambda:Function')
             
             result = original_func(*args, **kwargs)
 
