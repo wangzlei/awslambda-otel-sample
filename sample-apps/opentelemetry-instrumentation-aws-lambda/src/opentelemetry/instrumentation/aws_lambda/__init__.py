@@ -68,11 +68,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             __name__, __version__, kwargs.get("tracer_provider")
         )
 
-        print(self._tracer)
-
         self._tracer_provider = get_tracer_provider()
-
-        print(self._tracer_provider)
 
         lambda_handler = os.environ.get("_HANDLER")
         wrapped_names = lambda_handler.rsplit(".", 1)
