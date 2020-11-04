@@ -25,12 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 def lambda_handler(event, context):
-    print("I am in lambda_handler")
     return "200 OK"
 
 
 def wrapper_handler(event, context):
-    print("I am in wrapper_handler")
     return lambda_handler(event, context)
 
 
@@ -60,8 +58,6 @@ class TestAwsLambdaInstrumentor(TestBase):
         super().tearDown()
 
     def test_instrumen_handler(self):
-        print("---- ---- ---- 1")
-
         lambda_handler("event", self._mock_context)
         spans = self.memory_exporter.get_finished_spans()
 
@@ -76,7 +72,6 @@ class TestAwsLambdaInstrumentor(TestBase):
         )
 
     def test_instrumen_wrapper_handler(self):
-        print("---- ---- ---- X")
         current_module = sys.modules[__name__]
         os.environ["ORIG_HANDLER"] = (
             current_module.__name__ + ".lambda_handler"
@@ -92,8 +87,7 @@ class TestAwsLambdaInstrumentor(TestBase):
 
         assert spans
         span = spans[0]
-        print(span)
-        print(span.attributes)
+
         self.assertEqual(len(spans), 2)
         self.assertEqual(span.attributes["faas.execution"], "aws_request_id")
         self.assertEqual(
@@ -101,13 +95,10 @@ class TestAwsLambdaInstrumentor(TestBase):
         )
 
     def test_uninstrument(self):
-        print("---- ---- ---- 2")
-
         AwsLambdaInstrumentor().uninstrument()
 
         lambda_handler("event", self._mock_context)
 
         spans = self.memory_exporter.get_finished_spans()
         assert not spans
-        print(len(spans))
         self.assertEqual(len(spans), 0)
