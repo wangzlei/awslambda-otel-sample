@@ -38,7 +38,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         self._tracer_provider = kwargs.get("tracer_provider")
 
         lambda_handler = os.environ.get("_HANDLER")
-        wrapped_names = lambda_handler.split('.')
+        wrapped_names = lambda_handler.rsplit('.', 1)
         _wrapped_module_name = wrapped_names[0]
         _wrapped_function_name = wrapped_names[1]
 
