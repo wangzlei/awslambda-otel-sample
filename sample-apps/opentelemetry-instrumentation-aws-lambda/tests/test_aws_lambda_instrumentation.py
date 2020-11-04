@@ -81,14 +81,13 @@ class TestAwsLambdaInstrumentor(TestBase):
         AwsLambdaInstrumentor().instrument()
 
         wrapper_handler("event", self._mock_context)
-        lambda_handler("event", self._mock_context)
 
         spans = self.memory_exporter.get_finished_spans()
 
         assert spans
         span = spans[0]
 
-        self.assertEqual(len(spans), 2)
+        self.assertEqual(len(spans), 1)
         self.assertEqual(span.attributes["faas.execution"], "aws_request_id")
         self.assertEqual(
             span.attributes["faas.id"], "arn://lambda-function-arn"
