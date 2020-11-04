@@ -6,8 +6,7 @@ OpenTelemetry Aws Lambda Integration
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-instrumentation-aws-lambda.svg
    :target: https://pypi.org/project/opentelemetry-instrumentation-aws-lambda/
 
-This library allows tracing HTTP requests made by the
-`aiohttp client <https://docs.aiohttp.org/en/stable/client.html>`_ library.
+This library allows tracing AWS Lambda function
 
 Installation
 ------------
@@ -21,4 +20,5 @@ References
 ----------
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `aiohttp client Tracing <https://docs.aiohttp.org/en/stable/tracing_reference.html>`_
+* `OpenTelemetry faas spec <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/faas.md>`_
+* `AWS Lambda Python <https://docs.aws.amazon.com/lambda/latest/dg/lambda-python.html>`_
