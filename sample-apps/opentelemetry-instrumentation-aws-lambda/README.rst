@@ -1,4 +1,4 @@
-OpenTelemetry Aws Lambda Integration
+OpenTelemetry Aws Lambda instrumentation
 ========================================
 
 |pypi|
