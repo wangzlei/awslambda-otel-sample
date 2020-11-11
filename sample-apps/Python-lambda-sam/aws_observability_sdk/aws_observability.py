@@ -1,15 +1,7 @@
-from __future__ import absolute_import  # need that??
+from __future__ import absolute_import  # need it??
 import os
 import logging
 import jsonpickle
-
-logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-import boto3
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch_all
-# patch_all()
 
 from opentelemetry import trace
 # TODO: aws propagator
@@ -28,24 +20,16 @@ from opentelemetry.sdk.trace.export import (
 )
 
 from opentelemetry.resource import AwsLambdaResourceDetector
+
+logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # resource looks weird because get_aggregated_resources has bug, cannot merge _DEFAULT otel attributes
 resource=Resource.create().merge(AwsLambdaResourceDetector().detect())
 trace.set_tracer_provider(TracerProvider(
     ids_generator=AWSXRayIdsGenerator(), 
     resource=resource,)
 )
-
-
-# === jaeger exporter
-# from opentelemetry.exporter import jaeger
-# jaeger_exporter = jaeger.JaegerSpanExporter(
-#     service_name="my-multi-processors",
-#     agent_host_name="localhost",
-#     agent_port=6831,
-# )
-# trace.get_tracer_provider().add_span_processor(
-#     SimpleExportSpanProcessor(jaeger_exporter)
-# )
 
 trace.get_tracer_provider().add_span_processor(
     BatchExportSpanProcessor(ConsoleSpanExporter())

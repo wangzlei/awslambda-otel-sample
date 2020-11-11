@@ -19,14 +19,24 @@ Resources:
         - AdministratorAccess
       Tracing: Active
       Layers:
-        - !Ref AwsObservability
-        - arn:aws:lambda:us-west-2:886273918189:layer:my-aoc-layer:2
-  AwsObservability:
+        - !Ref AwsObservabilitySdk
+        - !Ref AwsObservabilityCollector
+  AwsObservabilitySdk:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: aws-observability-python38-beta
+      LayerName: aws-observability-sdk-python38-beta
       Description: Lambda AWS Observability Python3.8 layer.
-      ContentUri: ./aws_observability
+      ContentUri: ./aws_observability_sdk
+      CompatibleRuntimes:
+        - python3.8
+    Metadata:
+      BuildMethod: makefile
+  AwsObservabilityCollector:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: aws-observability-collector-beta
+      Description: Lambda AWS Observability Collector layer.
+      ContentUri: ./aws_observability_collector
       CompatibleRuntimes:
         - python3.8
     Metadata:
