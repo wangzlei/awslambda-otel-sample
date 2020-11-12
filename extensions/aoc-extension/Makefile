@@ -31,6 +31,7 @@ publish-layer: clean build package
 	aws lambda publish-layer-version --layer-name $(AOC_LAYER_NAME) --content S3Bucket=$(S3_BUCKET_NAME),S3Key=otel-col-extension.zip --compatible-runtimes java8.al2 java11 python3.8 python3.7
 
 build-AwsObservabilityCollector:
+	rpm --rebuilddb
 	yum install -y go wget
 	mkdir -p $(ARTIFACTS_DIR)/extensions
 	go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension main.go
