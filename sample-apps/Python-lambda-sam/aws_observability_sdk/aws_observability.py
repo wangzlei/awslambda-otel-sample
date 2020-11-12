@@ -4,8 +4,11 @@ import logging
 import jsonpickle
 
 from opentelemetry import trace
+
 # TODO: aws propagator
-from opentelemetry.instrumentation.aws_lambda.tmp.propagator.xray_id_generator import AWSXRayIdsGenerator
+from opentelemetry.instrumentation.aws_lambda.tmp.propagator.xray_id_generator import (
+    AWSXRayIdsGenerator,
+)
 
 from opentelemetry.sdk.resources import (
     Resource,
@@ -21,14 +24,19 @@ from opentelemetry.sdk.trace.export import (
 
 from opentelemetry.resource import AwsLambdaResourceDetector
 
-logging.basicConfig(format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',level=logging.INFO)
+logging.basicConfig(
+    format="%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s",
+    level=logging.INFO,
+)
 logger = logging.getLogger(__name__)
 
 # resource looks weird because get_aggregated_resources has bug, cannot merge _DEFAULT otel attributes
-resource=Resource.create().merge(AwsLambdaResourceDetector().detect())
-trace.set_tracer_provider(TracerProvider(
-    ids_generator=AWSXRayIdsGenerator(), 
-    resource=resource,)
+resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
+trace.set_tracer_provider(
+    TracerProvider(
+        ids_generator=AWSXRayIdsGenerator(),
+        resource=resource,
+    )
 )
 
 trace.get_tracer_provider().add_span_processor(
@@ -36,9 +44,10 @@ trace.get_tracer_provider().add_span_processor(
 )
 
 in_process = os.environ.get("INPROCESS_EXPORTER", None)
-if in_process is None or in_process.lower() != 'true':
+if in_process is None or in_process.lower() != "true":
     # === otlp exporter, collector
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+
     # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
     otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
     span_processor = BatchExportSpanProcessor(otlp_exporter)
@@ -47,6 +56,7 @@ if in_process is None or in_process.lower() != 'true':
 else:
     # === xray/xraydaemon exporter
     from opentelemetry.exporter.xray import XraySpanExporter
+
     xraySpanExporter = XraySpanExporter()
     trace.get_tracer_provider().add_span_processor(
         BatchExportSpanProcessor(xraySpanExporter)
@@ -58,9 +68,9 @@ tracer = trace.get_tracer(__name__)
 
 from importlib import import_module
 
+
 def modify_module_name(module_name):
-    """Returns a valid modified module to get imported
-    """
+    """Returns a valid modified module to get imported"""
     return ".".join(module_name.split("/"))
 
 
@@ -70,9 +80,7 @@ class HandlerError(Exception):
 
 path = os.environ.get("ORIG_HANDLER", None)
 if path is None:
-    raise HandlerError(
-        "ORIG_HANDLER is not defined."
-    )
+    raise HandlerError("ORIG_HANDLER is not defined.")
 parts = path.rsplit(".", 1)
 if len(parts) != 2:
     raise HandlerError("Value %s for ORIG_HANDLER has invalid format." % path)
@@ -85,8 +93,11 @@ lambda_handler = getattr(handler_module, handler_name)
 
 # Manual enable otel instrumentation. Can remove them once we package auto-instrumentation into lambda layer.
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+
 AioHttpClientInstrumentor().instrument()
 from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+
 BotocoreInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
+
 AwsLambdaInstrumentor().instrument()
