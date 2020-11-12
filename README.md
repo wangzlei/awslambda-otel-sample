@@ -1,7 +1,7 @@
 # awslambda-otel-sample
 
 ## Lambda OpenTelemetry java auto-instrumentation Sample
-under `sample-apps/java-lambda`
+under `sample-apps/java-lambda` 
 
 Make sure you have aws lambda extensions api trial permission, config aws credencial and aws region as us-east-1
 1. run `1-create-bucket.sh`
