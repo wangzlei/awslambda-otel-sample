@@ -11,5 +11,4 @@ mkdir aws_observability_collector && cp -r ../../extensions/aoc-extension/* aws_
 wget -O aws_observability_collector/aoc_linux_x86_64 https://github.com/open-telemetry/opentelemetry-collector-contrib/releases/download/v0.14.0/otelcontribcol_linux_amd64
 sam build -u -t $TEMPLATE
 find .aws-sam -name __pycache__ -exec rm -rf  {} \;
-# sam deploy --config-file $CONFIG
-sam deploy -g
+sam deploy --stack-name aot-py38-sample-layer --capabilities CAPABILITY_NAMED_IAM
