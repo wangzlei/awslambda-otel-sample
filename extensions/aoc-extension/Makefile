@@ -39,3 +39,4 @@ build-AwsObservabilityCollector:
 	cp config.yaml $(ARTIFACTS_DIR)/otelcol
 	# wget -O $(ARTIFACTS_DIR)/otelcol/collector https://github.com/open-telemetry/opentelemetry-collector-contrib/releases/download/v0.14.0/otelcontribcol_linux_amd64
 	cp aoc_linux_x86_64 $(ARTIFACTS_DIR)/otelcol/collector
+	chmod -R 755 $(ARTIFACTS_DIR)/otelcol
