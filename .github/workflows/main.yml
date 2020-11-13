@@ -17,6 +17,15 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{matrix.region}}
+    
+    strategy:
+      matrix:
+        region: [us-west-2]
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -32,17 +41,26 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
 
-      - name: setup
+      - name: sam build
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_REGION: ${{matrix.region}}
         run: |
-          sudo snap install docker
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-          export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+          echo $AWS_REGION
           brew tap aws/tap
           brew install aws-sam-cli
           cd sample-apps/Python-lambda-sam
           chmod +x run.sh
-          ./run.sh
+          ./run.sh -b
+      
+      - name: sam deploy us-west-2
+        if: ${{ success() }}
+        run: |
+          cd sample-apps/Python-lambda-sam
+          ./run.sh -d -r us-west-2
+      - name: sam deploy us-east-1
+        if: ${{ success() }}
+        run: |
+          cd sample-apps/Python-lambda-sam
+          ./run.sh -d -r us-east-1
