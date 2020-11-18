@@ -1,3 +1,5 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
 package main
 
 import (
@@ -17,9 +19,18 @@ var (
 	extensionName   = filepath.Base(os.Args[0]) // extension name has to match the filename
 	extensionClient = extension.NewClient(os.Getenv("AWS_LAMBDA_RUNTIME_API"))
 	printPrefix     = fmt.Sprintf("[%s]", extensionName)
+	configEnvKey    = "AOC_CONFIG"
 	otelCol         = "/opt/otelcol/collector"
-	otelColCfg      = "/opt/otelcol/config.yaml"
+	otelColCfg      = getConfig()
 )
+
+func getConfig() string {
+	val, ex := os.LookupEnv(configEnvKey)
+	if !ex {
+		return "/opt/otelcol/config.yaml"
+	}
+	return val
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -33,17 +44,15 @@ func main() {
 		println(printPrefix, "Exiting")
 	}()
 
-	// configKeys are keys requested from Extensions configuration during /register defined in the API docs
-	configKeys := []string{"FOO"}
-	res, err := extensionClient.Register(ctx, extensionName, configKeys)
+	res, err := extensionClient.Register(ctx, extensionName)
 	if err != nil {
 		panic(err)
 	}
 	println(printPrefix, "Register response:", prettyPrint(res))
 
 	// launch AOC
-	println("Launching aoc...")
-	cmd := exec.Command(otelCol, "--config",  otelColCfg, "--log-level=DEBUG")
+	println("Launching aoc with config file", otelColCfg)
+	cmd := exec.Command(otelCol, "--config", otelColCfg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
@@ -51,7 +60,6 @@ func main() {
 		println("aoc launch failed")
 		panic(err)
 	}
-    // TODO: ping /health to make sure aoc is ready
 	println("aoc is ready.")
 
 	// Will block until shutdown event is received or cancelled via the context.

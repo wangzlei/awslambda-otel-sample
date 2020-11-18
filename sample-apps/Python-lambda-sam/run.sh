@@ -85,9 +85,9 @@ main () {
     if [[ $deploy == true ]]; then
         echo "sam deploying..."
         sam deploy --stack-name $stack --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region $region
+        rm -rf aws_observability
     fi
 
-    rm -rf aws_observability
 }
 
 main "$@"
