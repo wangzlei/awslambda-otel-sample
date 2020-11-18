@@ -11,31 +11,22 @@ Resources:
       Description: Build AWS Observability layer
       MemorySize: 512
       Timeout: 15
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
       Environment:
         Variables:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/python/aot-instrument
-      Policies:
-        - AdministratorAccess
       Tracing: Active
       Layers:
         - !Ref AwsObservabilitySdk
-        - !Ref AwsObservabilityCollector
   AwsObservabilitySdk:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: aws-observability-sdk-python38-beta
+      LayerName: aws-observability-python38-beta
       Description: Lambda AWS Observability Python3.8 layer.
-      ContentUri: ./aws_observability_sdk
-      CompatibleRuntimes:
-        - python3.8
-    Metadata:
-      BuildMethod: makefile
-  AwsObservabilityCollector:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: aws-observability-collector-beta
-      Description: Lambda AWS Observability Collector layer.
-      ContentUri: ./aws_observability_collector
+      ContentUri: ./aws_observability
       CompatibleRuntimes:
         - python3.8
     Metadata:
