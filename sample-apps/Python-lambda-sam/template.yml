@@ -20,8 +20,8 @@ Resources:
           AWS_LAMBDA_EXEC_WRAPPER: /opt/python/aot-instrument
       Tracing: Active
       Layers:
-        - !Ref AwsObservabilitySdk
-  AwsObservabilitySdk:
+        - !Ref AwsObservability
+  AwsObservability:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: aws-observability-python38-beta

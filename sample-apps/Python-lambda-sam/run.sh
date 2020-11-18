@@ -57,16 +57,15 @@ main () {
     if [[ $build == true ]]; then
         echo "sam building..."
         rm -rf .aws-sam
-        rm -rf aws_observability
-        mkdir aws_observability && cp -r ../../extensions/aoc-extension/* aws_observability
-        cp -r aws_observability_sdk/* aws_observability
+        rm -rf aws_observability/aws_observability_collector
+        mkdir -p aws_observability/aws_observability_collector && cp -r ../../extensions/aoc-extension/* aws_observability/aws_observability_collector
         # remove local cp if aoc lambda is ready
         if [[ -z "${CI-}" ]]; then
             echo "Copy collector in local"
-            cp /Users/wangzl/workspace/aws-ob/aws-otel-collector/build/linux/aoc_linux_x86_64 aws_observability
+            cp /Users/wangzl/workspace/aws-ob/aws-otel-collector/build/linux/aoc_linux_x86_64 aws_observability/aws_observability_collector/
         else
             echo "CI download collector from github"
-            wget -O aws_observability/aoc_linux_x86_64 https://github.com/open-telemetry/opentelemetry-collector-contrib/releases/download/v0.14.0/otelcontribcol_linux_amd64
+            wget -O aws_observability/aws_observability_collector/aoc_linux_x86_64 https://github.com/open-telemetry/opentelemetry-collector-contrib/releases/download/v0.14.0/otelcontribcol_linux_amd64
         fi
         sam build -u -t $template
         # find .aws-sam -name __pycache__ -exec rm -rf  {} \;
@@ -75,19 +74,19 @@ main () {
     if [[ $debug == true ]]; then
         echo "debug mode, show code in lambda console"
         mkdir -p .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        mv .aws-sam/build/AwsObservabilitySdk/python/opentelemetry/instrumentation/auto_instrumentation/__init__.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        mv .aws-sam/build/AwsObservabilitySdk/python/opentelemetry/instrumentation/auto_instrumentation/sitecustomize.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
-        cp .aws-sam/build/AwsObservabilitySdk/python/bin/opentelemetry-instrument .aws-sam/build/function
-        mv .aws-sam/build/AwsObservabilitySdk/python/aws_observability.py .aws-sam/build/function/
-        mv .aws-sam/build/AwsObservabilitySdk/python/opentelemetry/instrumentation/aws_lambda .aws-sam/build/function/opentelemetry/instrumentation/
+        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/auto_instrumentation/__init__.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
+        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/auto_instrumentation/sitecustomize.py .aws-sam/build/function/opentelemetry/instrumentation/auto_instrumentation/
+        cp .aws-sam/build/AwsObservability/python/bin/opentelemetry-instrument .aws-sam/build/function
+        mv .aws-sam/build/AwsObservability/python/aws_observability.py .aws-sam/build/function/
+        mv .aws-sam/build/AwsObservability/python/opentelemetry/instrumentation/aws_lambda .aws-sam/build/function/opentelemetry/instrumentation/
     fi
 
     if [[ $deploy == true ]]; then
         echo "sam deploying..."
         sam deploy --stack-name $stack --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region $region
-        rm -rf aws_observability
     fi
 
+    rm -rf aws_observability/aws_observability_collector
 }
 
 main "$@"
