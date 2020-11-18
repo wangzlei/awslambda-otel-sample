@@ -58,7 +58,8 @@ main () {
         echo "sam building..."
         rm -rf .aws-sam
         rm -rf aws_observability/aws_observability_collector
-        mkdir -p aws_observability/aws_observability_collector && cp -r ../../extensions/aoc-extension/* aws_observability/aws_observability_collector
+        mkdir -p aws_observability/aws_observability_collector
+        cp -r ../../extensions/aoc-extension/* aws_observability/aws_observability_collector
         # remove local cp if aoc lambda is ready
         if [[ -z "${CI-}" ]]; then
             echo "Copy collector in local"

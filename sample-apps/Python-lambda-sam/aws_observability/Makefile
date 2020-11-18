@@ -14,7 +14,7 @@ build-AwsObservability:
 	rpm --rebuilddb
 	yum install -y go
 	mkdir -p $(ARTIFACTS_DIR)/extensions
-	cd $(AOC) && go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension main.go
+	cd $(AOC) && go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension *.go
 	mkdir -p $(ARTIFACTS_DIR)/otelcol
 	cp $(AOC)/config.yaml $(ARTIFACTS_DIR)/otelcol
 	cp $(AOC)/aoc_linux_x86_64 $(ARTIFACTS_DIR)/otelcol/collector
