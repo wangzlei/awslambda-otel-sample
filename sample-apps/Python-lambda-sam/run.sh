@@ -87,6 +87,7 @@ main () {
         sam deploy --stack-name $stack --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region $region
     fi
 
+    rm -rf aws_observability
 }
 
 main "$@"

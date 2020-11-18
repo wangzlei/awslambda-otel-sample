@@ -10,7 +10,7 @@ build-AwsObservabilitySdk:
 	rm -rf $(ARTIFACTS_DIR)/python/urllib3*
 
 	rpm --rebuilddb
-	yum install -y go wget
+	yum install -y go
 	mkdir -p $(ARTIFACTS_DIR)/extensions
 	go build -o $(ARTIFACTS_DIR)/extensions/aoc-extension main.go
 	mkdir -p $(ARTIFACTS_DIR)/otelcol
