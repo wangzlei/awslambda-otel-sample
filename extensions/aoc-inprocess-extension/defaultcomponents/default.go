@@ -20,33 +20,30 @@
 	 "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter"
 	 "github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor"
 	 "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsecscontainermetricsreceiver"
-	 "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awsxrayreceiver"
 	 "go.opentelemetry.io/collector/component"
 	 "go.opentelemetry.io/collector/component/componenterror"
 	 "go.opentelemetry.io/collector/exporter/fileexporter"
 	 "go.opentelemetry.io/collector/exporter/loggingexporter"
 	 "go.opentelemetry.io/collector/exporter/otlpexporter"
-	 "go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	 "go.opentelemetry.io/collector/exporter/prometheusexporter"
 	 "go.opentelemetry.io/collector/receiver/otlpreceiver"
-	 "go.opentelemetry.io/collector/receiver/prometheusreceiver"
-	 "go.opentelemetry.io/collector/service/defaultcomponents"
+	 //"go.opentelemetry.io/collector/receiver/prometheusreceiver"
+	 //"go.opentelemetry.io/collector/service/defaultcomponents"
  )
  
  // Components register OTel components for aws-otel-collector distribution
  func Components() (component.Factories, error) {
 	 errs := []error{}
-	 factories, err := defaultcomponents.Components()
+	 factories, err := emptyComponents()
 	 if err != nil {
-		 return component.Factories{}, err
+		 errs = append(errs, err)
 	 }
  
 	 // enable the selected receivers
 	 factories.Receivers, err = component.MakeReceiverFactoryMap(
-		 prometheusreceiver.NewFactory(),
+		 //prometheusreceiver.NewFactory(),
 		 otlpreceiver.NewFactory(),
 		 awsecscontainermetricsreceiver.NewFactory(),
-		 awsxrayreceiver.NewFactory(),
 	 )
 	 if err != nil {
 		 errs = append(errs, err)
@@ -72,12 +69,21 @@
 		 loggingexporter.NewFactory(),
 		 fileexporter.NewFactory(),
 		 otlpexporter.NewFactory(),
-		 otlphttpexporter.NewFactory(),
 	 )
 	 if err != nil {
 		 errs = append(errs, err)
 	 }
  
 	 return factories, componenterror.CombineErrors(errs)
+ }
+ 
+ func emptyComponents() (
+	 component.Factories,
+	 error,
+	 ) {
+		 var errs []error
+		 factories := component.Factories{
+		 }
+		 return factories, componenterror.CombineErrors(errs)
  }
  
