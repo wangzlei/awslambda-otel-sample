@@ -61,7 +61,7 @@ main () {
         mkdir -p aws_observability/aws_observability_collector
         cp -r ../../extensions/aoc-inprocess-extension/* aws_observability/aws_observability_collector
         sam build -u -t $template
-        # find .aws-sam -name __pycache__ -exec rm -rf  {} \;
+        find . -name __pycache__ -exec rm -rf  {} \; &>/dev/null
     fi
 
     if [[ $debug == true ]]; then
