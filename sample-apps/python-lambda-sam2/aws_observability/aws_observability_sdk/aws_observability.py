@@ -1,21 +1,14 @@
 import os
 import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 from opentelemetry import trace
+from importlib import import_module
 
 # TODO: aws propagator
 from opentelemetry.instrumentation.aws_lambda.tmp.propagator.xray_id_generator import (
     AWSXRayIdsGenerator,
 )
 
-from opentelemetry.sdk.resources import (
-    Resource,
-    OTELResourceDetector,
-    get_aggregated_resources,
-)
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -24,8 +17,15 @@ from opentelemetry.sdk.trace.export import (
 )
 
 from opentelemetry.resource import AwsLambdaResourceDetector
+from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 
-# resource looks weird because get_aggregated_resources has bug, cannot merge _DEFAULT otel attributes
+from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
+from pkg_resources import iter_entry_points
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# TODO: get_aggregated_resources
 resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
 trace.set_tracer_provider(
     TracerProvider(
@@ -38,30 +38,12 @@ trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
 )
 
-in_process = os.environ.get("INPROCESS_EXPORTER", None)
-if in_process is None or in_process.lower() != "true":
-    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
-    # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
-    span_processor = BatchExportSpanProcessor(otlp_exporter)
-    trace.get_tracer_provider().add_span_processor(span_processor)
-    logger.info("OTLP exporter is ready ...")
-else:
-    from opentelemetry.exporter.xray import XraySpanExporter
+otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+span_processor = BatchExportSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
 
-    xraySpanExporter = XraySpanExporter()
-    trace.get_tracer_provider().add_span_processor(
-        BatchExportSpanProcessor(xraySpanExporter)
-    )
-    logger.info("AWS Xray in-process exporter is ready ...")
-
-from importlib import import_module
-
-from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
 AwsLambdaInstrumentor().instrument()
-
 # Load instrumentors from entry_points
-from pkg_resources import iter_entry_points
 for entry_point in iter_entry_points("opentelemetry_instrumentor"):
     print(entry_point)
     try:
@@ -80,6 +62,7 @@ def modify_module_name(module_name):
 
 class HandlerError(Exception):
     pass
+
 
 path = os.environ.get("ORIG_HANDLER", None)
 if path is None:
