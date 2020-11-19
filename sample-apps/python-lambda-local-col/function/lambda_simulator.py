@@ -37,7 +37,7 @@ os.environ['INPROCESS_EXPORTER'] = 'false'
 
 # from lambda_function import lambda_handler 
 os.environ['ORIG_HANDLER'] = 'lambda_function.lambda_handler'
-from aws_observability_wrapper import handler
+from aws_observability import lambda_handler
     
 
 class MockLambdaContext(object):
@@ -49,5 +49,5 @@ lambdaContext.aws_request_id = "mock_aws_request_id"
 
 
 # call lambda function
-handler('mock lambda event', lambdaContext)
+lambda_handler('mock lambda event', lambdaContext)
 xray_recorder.end_segment()
