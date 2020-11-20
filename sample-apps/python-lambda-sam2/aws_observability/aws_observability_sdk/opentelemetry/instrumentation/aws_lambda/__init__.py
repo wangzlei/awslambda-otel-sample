@@ -87,7 +87,6 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
     def _functionPatch(self, original_func, instance, args, kwargs):
         lambda_context = args[1]
-        ctx_invoked_function_arn = lambda_context.invoked_function_arn
         ctx_aws_request_id = lambda_context.aws_request_id
         orig_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
         xray_trace_id = os.environ.get("_X_AMZN_TRACE_ID", "")
@@ -102,7 +101,6 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
         ) as span:
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute("faas.execution", ctx_aws_request_id)
-            span.set_attribute("faas.id", ctx_invoked_function_arn)
 
             result = original_func(*args, **kwargs)
 

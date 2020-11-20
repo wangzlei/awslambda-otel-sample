@@ -1,8 +1,8 @@
-opentelemetry-instrumentation-botocore
 opentelemetry-instrumentation-aiohttp-client
 opentelemetry-instrumentation-asgi
 opentelemetry-instrumentation-asyncpg
 opentelemetry-instrumentation-boto
+opentelemetry-instrumentation-botocore
 opentelemetry-instrumentation-celery
 opentelemetry-instrumentation-dbapi
 opentelemetry-instrumentation-django

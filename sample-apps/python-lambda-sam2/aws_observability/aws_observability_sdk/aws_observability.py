@@ -11,13 +11,11 @@ from opentelemetry.instrumentation.aws_lambda.tmp.propagator.xray_id_generator i
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
     SimpleExportSpanProcessor,
     BatchExportSpanProcessor,
 )
 
 from opentelemetry.resource import AwsLambdaResourceDetector
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
 from pkg_resources import iter_entry_points
@@ -34,13 +32,26 @@ trace.set_tracer_provider(
     )
 )
 
-trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
-)
+console_exporter = os.environ.get("CONSOLE_EXPORTER", None)
+if not console_exporter is None:
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+    trace.get_tracer_provider().add_span_processor(SimpleExportSpanProcessor(ConsoleSpanExporter()))
+    logger.info('Console exporter initialized.')
 
-otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
-span_processor = BatchExportSpanProcessor(otlp_exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+ci = os.environ.get("CI", None)
+if ci is None:
+    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+    span_processor = BatchExportSpanProcessor(otlp_exporter)
+    trace.get_tracer_provider().add_span_processor(span_processor)
+    logger.info('Otlp exporter initialized.')
+else:
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    in_memory_exporter = InMemorySpanExporter()
+    span_processor = SimpleExportSpanProcessor(in_memory_exporter)
+    trace.get_tracer_provider().add_span_processor(span_processor)
+    logger.info('In memory exporter initialized.')
+
 
 AwsLambdaInstrumentor().instrument()
 # Load instrumentors from entry_points
@@ -48,11 +59,10 @@ for entry_point in iter_entry_points("opentelemetry_instrumentor"):
     print(entry_point)
     try:
         entry_point.load()().instrument()  # type: ignore
-        logger.info("Instrumented %s", entry_point.name)
+        logger.debug("Instrumented %s", entry_point.name)
 
     except Exception:
-        # logger.exception("Instrumenting of %s failed", entry_point.name)
-        logger.info("Instrumenting of %s failed", entry_point.name)
+        logger.debug("Instrumenting of %s failed", entry_point.name)
 
 
 def modify_module_name(module_name):
