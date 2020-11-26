@@ -51,9 +51,10 @@ from importlib import import_module
 from wrapt import wrap_function_wrapper
 
 # TODO: aws propagator
-from opentelemetry.instrumentation.aws_lambda.tmp.propagator import (
-    AWSXRayFormat,
+from opentelemetry.sdk.extension.aws.trace.propagation.aws_xray_format import (
+    AwsXRayFormat,
 )
+from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.instrumentation.aws_lambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
@@ -68,9 +69,7 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
         self._tracer_provider = get_tracer_provider()
 
-        lambda_handler = os.environ.get(
-            "ORIG_HANDLER", os.environ.get("_HANDLER")
-        )
+        lambda_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
         wrapped_names = lambda_handler.rsplit(".", 1)
         self._wrapped_module_name = wrapped_names[0]
         self._wrapped_function_name = wrapped_names[1]
@@ -89,18 +88,18 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
     def _functionPatch(self, original_func, instance, args, kwargs):
         lambda_context = args[1]
-        ctx_invoked_function_arn = lambda_context.invoked_function_arn
         ctx_aws_request_id = lambda_context.aws_request_id
+        ctx_invoked_function_arn = lambda_context.invoked_function_arn
         orig_handler = os.environ.get("ORIG_HANDLER", os.environ.get("_HANDLER"))
         xray_trace_id = os.environ.get("_X_AMZN_TRACE_ID", "")
 
-        propagator = AWSXRayFormat()
+        propagator = AwsXRayFormat()
         parent_context = propagator.extract(
-            dict.__getitem__, {"X-Amzn-Trace-Id": xray_trace_id}
+            DictGetter(), {"X-Amzn-Trace-Id": xray_trace_id}
         )
 
         with self._tracer.start_as_current_span(
-            orig_handler, context=parent_context, kind=SpanKind.CLIENT
+            orig_handler, context=parent_context, kind=SpanKind.CONSUMER
         ) as span:
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute("faas.execution", ctx_aws_request_id)
