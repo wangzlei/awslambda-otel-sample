@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
+Transform: AWS::Serverless-2016-10-31
 Description: An AWS Lambda application that calls the Lambda API.
 Resources:
   function:
@@ -7,7 +7,7 @@ Resources:
     Properties:
       Handler: aws_observability_wrapper.handler
       Runtime: python3.8
-      CodeUri: function/lambda_function.py
+      CodeUri: s3://lambda-artifacts-d60ed7b76f9dce98/26f3148a3ebdb21b093d97baeb9ad458
       Description: Test Python OTel Lambda
       MemorySize: 512
       Timeout: 15
@@ -16,19 +16,18 @@ Resources:
           ORIG_HANDLER: lambda_function.lambda_handler
           INPROCESS_EXPORTER: false
       Policies:
-        - AdministratorAccess
+      - AdministratorAccess
       Tracing: Active
       Layers:
-        - !Ref libs
-        # - arn:aws:lambda:us-west-2:886273918189:layer:otel-py37:3
-        - arn:aws:lambda:us-west-2:886273918189:layer:my-aoc-layer:2
+      - Ref: libs
+      - arn:aws:lambda:us-west-2:886273918189:layer:my-aoc-layer:2
   libs:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: aws-observability-python2
       Description: Lambda OpenTelemetry Python demo.
-      ContentUri: package/.
+      ContentUri: s3://lambda-artifacts-d60ed7b76f9dce98/e37dd0fce51dabc161cab463e4e8aad9
       CompatibleRuntimes:
-        - python3.8
-        - python3.7
-        - python3.6
+      - python3.8
+      - python3.7
+      - python3.6

@@ -55,8 +55,8 @@ in_process = os.environ.get("INPROCESS_EXPORTER", None)
 if in_process is None or in_process.lower() != 'true':
     # === otlp exporter, collector
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
-    # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+    # otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680")
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
     span_processor = BatchExportSpanProcessor(otlp_exporter)
     trace.get_tracer_provider().add_span_processor(span_processor)
     logger.info("OTLP exporter is ready ...")

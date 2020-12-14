@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://lambda-artifacts-1b9467f65dd77f6b/25bec3a7673051f484fddf1995fff6e0
+      Handler: example.Handler::handleRequest
+      Runtime: java8.al2
+      Description: Java opentelemetry auto-instrumentation demo
+      MemorySize: 512
+      Timeout: 120
+      Environment:
+        Variables:
+          JAVA_TOOL_OPTIONS: '-javaagent:/opt/javaagent/otelagent.jar -Dota.exporter=otlp
+            -Dotel.otlp.endpoint=localhost:55680 -Dotel.bsp.schedule.delay=5000 -Dio.opentelemetry.auto.slf4j.simpleLogger.defaultLogLevel=info '
+      Layers:
+      - arn:aws:lambda:us-east-1:886273918189:layer:my-aoc-layer:5
+      - arn:aws:lambda:us-east-1:886273918189:layer:my-java-otel-layer:3
+      Policies:
+      - AdministratorAccess
+      Tracing: Active

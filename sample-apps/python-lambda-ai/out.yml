@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.7
+      CodeUri: s3://lambda-artifacts-2612096a0dd40b0a/9fe884321ec4fedf5faa4bd15766c50c
+      Description: Call the AWS Lambda API
+      MemorySize: 512
+      Timeout: 30
+      Environment:
+        Variables:
+          AWS_LAMBDA_EXEC_WRAPPER: /var/task/wrapper_script
+      Policies:
+      - AdministratorAccess
+      Tracing: Active
+      Layers:
+      - Ref: libs
+  libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: blank-python-lib
+      Description: Lambda OpenTelemetry Python demo.
+      ContentUri: s3://lambda-artifacts-2612096a0dd40b0a/e2b2b05bd88924140f2a5dadf676e709
+      CompatibleRuntimes:
+      - python3.8
