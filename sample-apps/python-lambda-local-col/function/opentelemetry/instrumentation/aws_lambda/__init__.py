@@ -106,9 +106,9 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
             span.set_attribute("faas.id", ctx_invoked_function_arn)
 
             # need to fix in Collector
-            resources_attrbuters = span.resource.attributes
-            span.set_attribute("faas.name", resources_attrbuters["faas.name"])
-            span.set_attribute("faas.version", resources_attrbuters["faas.version"])
+            # resources_attrbuters = span.resource.attributes
+            # span.set_attribute("faas.name", resources_attrbuters["faas.name"])
+            # span.set_attribute("faas.version", resources_attrbuters["faas.version"])
 
             result = original_func(*args, **kwargs)
 

@@ -3,6 +3,10 @@ import logging
 from opentelemetry import trace
 from importlib import import_module
 
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch_all
+patch_all()
+
 from opentelemetry.sdk.extension.aws.trace import AwsXRayIdsGenerator
 
 from opentelemetry.sdk.resources import Resource

@@ -27,5 +27,6 @@ def lambda_handler(event, context):
     for bucket in s3.buckets.all():
         print(bucket.name)
 
+    # s3.meta.client.upload_file('lambda_simulator.py', 'aoc-layers-us-west-2', 'hello.txt')
     return "200 OK"
 
