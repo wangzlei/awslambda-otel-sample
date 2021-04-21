@@ -54,7 +54,7 @@ from wrapt import wrap_function_wrapper
 from opentelemetry.sdk.extension.aws.trace.propagation.aws_xray_format import (
     AwsXRayFormat,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
+# from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.instrumentation.aws_lambda.version import __version__
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
 from opentelemetry.instrumentation.utils import unwrap
@@ -95,11 +95,11 @@ class AwsLambdaInstrumentor(BaseInstrumentor):
 
         propagator = AwsXRayFormat()
         parent_context = propagator.extract(
-            DictGetter(), {"X-Amzn-Trace-Id": xray_trace_id}
+            {"X-Amzn-Trace-Id": xray_trace_id}
         )
 
         with self._tracer.start_as_current_span(
-            orig_handler, context=parent_context, kind=SpanKind.CONSUMER
+            name=orig_handler, context=parent_context, kind=SpanKind.SERVER
         ) as span:
             # Refer: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/faas.md#example
             span.set_attribute("faas.execution", ctx_aws_request_id)

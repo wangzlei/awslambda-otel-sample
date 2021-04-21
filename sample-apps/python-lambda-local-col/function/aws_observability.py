@@ -1,59 +1,67 @@
-import os
+import argparse
 import logging
-from opentelemetry import trace
+import os
+
 from importlib import import_module
-
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch_all
-patch_all()
-
-from opentelemetry.sdk.extension.aws.trace import AwsXRayIdsGenerator
-
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
-    BatchExportSpanProcessor,
-)
-
-from opentelemetry.resource import AwsLambdaResourceDetector
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from pkg_resources import iter_entry_points
 
 from opentelemetry.instrumentation.aws_lambda import AwsLambdaInstrumentor
-from pkg_resources import iter_entry_points
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# TODO: get_aggregated_resources
-resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
-trace.set_tracer_provider(
-    TracerProvider(
-        ids_generator=AwsXRayIdsGenerator(),
-        resource=resource,
-    )
-)
+# TODO: waiting OTel Python supports env variable config for resource detector
+# from opentelemetry.resource import AwsLambdaResourceDetector
+# from opentelemetry.sdk.resources import Resource
+# resource = Resource.create().merge(AwsLambdaResourceDetector().detect())
+# trace.get_tracer_provider.resource = resource
 
-trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
-)
+def _load_distros():
+    for entry_point in iter_entry_points("opentelemetry_distro"):
+        try:
+            entry_point.load()().configure()  # type: ignore
+            logger.info("Distribution %s configured", entry_point.name)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.info(
+                "Distribution %s configuration failed", entry_point.name
+            )
 
-otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
-span_processor = BatchExportSpanProcessor(otlp_exporter)
-trace.get_tracer_provider().add_span_processor(span_processor)
+def _load_instrumentors():
+    package_to_exclude = os.environ.get(OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, [])
+    if isinstance(package_to_exclude, str):
+        package_to_exclude = package_to_exclude.split(",")
+        # to handle users entering "requests , flask" or "requests, flask" with spaces
+        package_to_exclude = [x.strip() for x in package_to_exclude]
+    for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+        try:
+            if entry_point.name in package_to_exclude:
+                logger.info(
+                    "Instrumentation skipped for library %s", entry_point.name
+                )
+                continue
+            entry_point.load()().instrument()  # type: ignore
+            logger.info("Instrumented %s", entry_point.name)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.info("Instrumenting of %s failed", entry_point.name)
 
-AwsLambdaInstrumentor().instrument()
-# Load instrumentors from entry_points
-for entry_point in iter_entry_points("opentelemetry_instrumentor"):
-    print(entry_point)
-    try:
-        entry_point.load()().instrument()  # type: ignore
-        logger.info("Instrumented %s", entry_point.name)
-
-    except Exception:
-        # logger.exception("Instrumenting of %s failed", entry_point.name)
-        logger.info("Instrumenting of %s failed", entry_point.name)
+def _load_configurators():
+    configured = None
+    for entry_point in iter_entry_points("opentelemetry_configurator"):
+        if configured is not None:
+            logger.warning(
+                "Configuration of %s not loaded, %s already loaded",
+                entry_point.name,
+                configured,
+            )
+            continue
+        try:
+            entry_point.load()().configure()  # type: ignore
+            configured = entry_point.name
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.info("Configuration of %s failed", entry_point.name)
 
 
 def modify_module_name(module_name):
@@ -64,6 +72,12 @@ def modify_module_name(module_name):
 class HandlerError(Exception):
     pass
 
+
+_load_distros()
+_load_configurators()
+_load_instrumentors()
+#TODO: move to python-contrib
+AwsLambdaInstrumentor().instrument()
 
 path = os.environ.get("ORIG_HANDLER", None)
 if path is None:

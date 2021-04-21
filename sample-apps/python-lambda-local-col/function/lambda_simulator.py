@@ -3,7 +3,6 @@ from aws_xray_sdk.core import xray_recorder
 import json
 import logging
 from aws_xray_sdk.core.models.trace_header import TraceHeader
-# from opentelemetry.propagator.xray_id_generator import AWSXRayIdsGenerator
 
 logger = logging.getLogger(__name__)
 
